@@ -16,6 +16,8 @@ export type CourtStat = {
   occupancy: number;
   revenue: number;
   reservations: number;
+  previousOccupancy?: number;
+  capacityHours?: number;
 };
 
 export type PeakHour = {
@@ -112,10 +114,10 @@ export function getDemoDashboard(): DashboardData {
   };
 
   const courts: CourtStat[] = [
-    { court: "Cancha 1", occupancy: 82, revenue: 1240000, reservations: 184 },
-    { court: "Cancha 2", occupancy: 74, revenue: 1105000, reservations: 169 },
-    { court: "Cancha 3", occupancy: 69, revenue: 980000, reservations: 152 },
-    { court: "Cancha 4", occupancy: 71, revenue: 1020000, reservations: 158 },
+    { court: "Cancha 1", occupancy: 82, previousOccupancy: 79, capacityHours: 300, revenue: 1240000, reservations: 184 },
+    { court: "Cancha 2", occupancy: 74, previousOccupancy: 76, capacityHours: 300, revenue: 1105000, reservations: 169 },
+    { court: "Cancha 3", occupancy: 69, previousOccupancy: 65, capacityHours: 300, revenue: 980000, reservations: 152 },
+    { court: "Cancha 4", occupancy: 71, previousOccupancy: 70, capacityHours: 300, revenue: 1020000, reservations: 158 },
   ];
 
   const peakHours: PeakHour[] = [

@@ -327,7 +327,7 @@ function Parallax({ children, speed = 0.05 }: { children: React.ReactNode; speed
   return <div ref={ref} className="marketing-parallax will-change-transform">{children}</div>;
 }
 
-function useStrokeReplay(hoverParent = false) {
+function useStrokeReplay() {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current;
@@ -348,13 +348,10 @@ function useStrokeReplay(hoverParent = false) {
       else stop();
     }, { threshold: 0.35 });
     observer.observe(el);
-    const hoverTarget = hoverParent ? el.parentElement : el;
-    hoverTarget?.addEventListener("mouseenter", play);
     return () => {
       observer.disconnect();
-      hoverTarget?.removeEventListener("mouseenter", play);
     };
-  }, [hoverParent]);
+  }, []);
   return ref;
 }
 
@@ -397,7 +394,7 @@ function StrokeDivider({ label, tone = "light" }: { label?: string; tone?: "ligh
 }
 
 function StrokeEdge({ color = "#c9f36a" }: { color?: string }) {
-  const ref = useStrokeReplay(true);
+  const ref = useStrokeReplay();
   return (
     <div ref={ref} className="marketing-stroke pointer-events-none absolute inset-x-4 top-0 h-[10px] overflow-visible" style={{ color }} aria-hidden="true">
       <svg viewBox="0 0 100 4" preserveAspectRatio="none" className="absolute inset-x-0 top-3 h-[4px] w-full">
@@ -579,16 +576,10 @@ function PaddleMatch() {
 
     const handleClick = (e: MouseEvent) => {
       if (!sectionRef.current || !ballRef.current) return;
+      if (e.target instanceof Element && e.target.closest("a,button,input,select,textarea")) return;
       const rect = sectionRef.current.getBoundingClientRect();
       const inside = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
       if (!inside) return;
-
-      // Visual hit
-      ballRef.current.classList.add("clicking");
-      window.setTimeout(() => ballRef.current?.classList.remove("clicking"), 120);
-
-      // Sound
-      playBallHit();
 
       // Hit nearest racket based on click position
       const centerX = rect.width / 2;
@@ -599,6 +590,7 @@ function PaddleMatch() {
         void target.offsetWidth;
         target.classList.add("hit");
       }
+      playBallHit();
     };
 
     const loop = () => {
@@ -687,7 +679,7 @@ function PaddleMatch() {
       {/* Ball cursor */}
       <div
         ref={ballRef}
-        className="marketing-ball pointer-events-none absolute left-1/2 top-[28%] size-5 rounded-full bg-[#dfff3d] shadow-[0_0_24px_rgba(201,243,106,.6)]"
+        className="marketing-ball pointer-events-none absolute left-1/2 top-[28%] z-20 size-5 rounded-full bg-[#dfff3d] shadow-[0_0_24px_rgba(201,243,106,.6)]"
       />
     </div>
   );

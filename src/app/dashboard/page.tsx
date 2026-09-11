@@ -15,6 +15,7 @@ import { RevenueChart } from "@/components/dashboard/charts/revenue-chart";
 import { OccupancyChart } from "@/components/dashboard/charts/occupancy-chart";
 import { PeakHoursChart } from "@/components/dashboard/charts/peak-hours-chart";
 import { formatCurrency, greeting } from "@/lib/format";
+import { formatNumber } from "@/lib/format";
 import { getDashboardData } from "@/services/dashboard";
 
 export const metadata: Metadata = {
@@ -30,6 +31,17 @@ const STATUS_LABEL: Record<string, { label: string; variant: "default" | "second
 
 export default async function DashboardPage() {
   const data = await getDashboardData();
+  const totalRevenue = data.last30Days.reduce((sum, day) => sum + day.revenue, 0);
+  const totalReservations = data.last30Days.reduce((sum, day) => sum + day.reservations, 0);
+  const averageOccupancy = data.courts.length
+    ? Math.round(data.courts.reduce((sum, court) => sum + court.occupancy, 0) / data.courts.length)
+    : 0;
+  const bestCourt = data.courts.length
+    ? data.courts.reduce((best, court) => (court.revenue > best.revenue ? court : best), data.courts[0]!)
+    : undefined;
+  const firstHalfRevenue = data.last30Days.slice(0, 15).reduce((sum, day) => sum + day.revenue, 0);
+  const secondHalfRevenue = data.last30Days.slice(15).reduce((sum, day) => sum + day.revenue, 0);
+  const periodVariation = firstHalfRevenue ? Math.round(((secondHalfRevenue - firstHalfRevenue) / firstHalfRevenue) * 100) : 0;
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
@@ -41,6 +53,23 @@ export default async function DashboardPage() {
       </div>
 
       <KpiCards today={data.today} />
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          ["Ingreso acumulado", formatCurrency(totalRevenue), "últimos 30 días"],
+          ["Ticket promedio", formatCurrency(totalReservations ? totalRevenue / totalReservations : 0), `${formatNumber(totalReservations)} reservas`],
+          ["Cancha más rentable", bestCourt?.court ?? "—", bestCourt ? formatCurrency(bestCourt.revenue) : "Sin datos"],
+          ["Ocupación general", `${averageOccupancy}%`, "promedio de canchas"],
+        ].map(([label, value, caption]) => (
+          <Card key={label} className="border-primary/20 bg-primary/[0.04]">
+            <CardContent className="p-4">
+              <p className="text-xs font-medium text-muted-foreground">{label}</p>
+              <p className="mt-1 text-xl font-semibold tracking-tight">{value}</p>
+              <p className="text-xs text-muted-foreground">{caption}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
@@ -54,7 +83,15 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Ingresos · últimos 30 días</CardTitle>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className={`mb-1 text-xs font-medium ${periodVariation >= 0 ? "text-primary" : "text-muted-foreground"}`}>
+                  {periodVariation >= 0 ? "↑" : "↓"} {Math.abs(periodVariation)}% vs. primeros 15 días
+                </p>
+                <CardTitle className="text-base">Ingresos · últimos 30 días</CardTitle>
+              </div>
+              <p className="text-xl font-semibold tracking-tight">{formatCurrency(totalRevenue)}</p>
+            </div>
           </CardHeader>
           <CardContent>
             <RevenueChart data={data.last30Days} />
@@ -63,7 +100,10 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Ocupación por cancha · este mes</CardTitle>
+            <div className="flex items-center justify-between gap-3">
+              <CardTitle className="text-base">Ocupación por cancha · este mes</CardTitle>
+              <span className="text-xs text-muted-foreground">Promedio: {averageOccupancy}%</span>
+            </div>
           </CardHeader>
           <CardContent>
             <OccupancyChart data={data.courts} />

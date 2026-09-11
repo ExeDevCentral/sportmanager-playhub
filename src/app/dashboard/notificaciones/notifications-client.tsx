@@ -27,6 +27,16 @@ import {
   type NotificationSettings,
 } from "@/services/notifications";
 import type { NotificationStatus } from "@/types/database";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type EmailSetup = {
   configured: boolean;
@@ -68,6 +78,9 @@ export function NotificationsClient({ emailSetup }: { emailSetup: EmailSetup }) 
   const [records, setRecords] = React.useState<NotificationRecord[]>([]);
   const [settings, setSettings] = React.useState<NotificationSettings | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const [selectedTemplateKey, setSelectedTemplateKey] = React.useState("");
+  const [confirmSendOpen, setConfirmSendOpen] = React.useState(false);
+  const testFormRef = React.useRef<HTMLFormElement>(null);
   const [testState, testAction, testPending] = useActionState(sendTestEmail, null);
 
   React.useEffect(() => {
@@ -84,6 +97,9 @@ export function NotificationsClient({ emailSetup }: { emailSetup: EmailSetup }) 
       .then((data) => {
         if (cancelled) return;
         setTemplates(data.templates);
+        setSelectedTemplateKey(
+          data.templates.find((template) => template.channel === "email" && template.is_active)?.key ?? "",
+        );
         setRecords(data.records);
         setSettings(data.settings);
       })
@@ -139,13 +155,38 @@ export function NotificationsClient({ emailSetup }: { emailSetup: EmailSetup }) 
               </Badge>
             </CardHeader>
             <CardContent>
-              <form action={testAction} className="flex max-w-md gap-2">
+              <form ref={testFormRef} action={testAction} className="flex max-w-2xl flex-col gap-2 sm:flex-row">
                 <Input name="email" type="email" placeholder="tu@email.com" required aria-label="Email de prueba" />
-                <Button type="submit" disabled={testPending} size="sm">
+                <select
+                  name="template_key"
+                  value={selectedTemplateKey}
+                  onChange={(event) => setSelectedTemplateKey(event.target.value)}
+                  className="h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  aria-label="Plantilla de email"
+                >
+                  {templates
+                    .filter((template) => template.channel === "email" && template.is_active)
+                    .map((template) => (
+                      <option key={template.key} value={template.key}>
+                        {template.name}
+                      </option>
+                    ))}
+                </select>
+                <Button
+                  type="button"
+                  disabled={testPending || !selectedTemplateKey}
+                  size="sm"
+                  onClick={() => {
+                    if (testFormRef.current?.reportValidity()) setConfirmSendOpen(true);
+                  }}
+                >
                   {testPending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
                   Probar envío
                 </Button>
               </form>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Elegí la plantilla activa que querés previsualizar y enviar al destinatario de prueba.
+              </p>
             </CardContent>
           </Card>
           {loading ? (
@@ -314,6 +355,30 @@ export function NotificationsClient({ emailSetup }: { emailSetup: EmailSetup }) 
           </div>
         </TabsContent>
       </Tabs>
+      <AlertDialog open={confirmSendOpen} onOpenChange={setConfirmSendOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro de enviar este email?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se enviará una prueba usando la plantilla{" "}
+              <strong>{templates.find((template) => template.key === selectedTemplateKey)?.name ?? "seleccionada"}</strong>.
+              En modo demo no sale ningún correo real.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Volver</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault();
+                setConfirmSendOpen(false);
+                testFormRef.current?.requestSubmit();
+              }}
+            >
+              Sí, enviar prueba
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

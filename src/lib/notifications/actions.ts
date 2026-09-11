@@ -81,12 +81,44 @@ export async function sendTestEmail(
   const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
   const startsAt = `${tomorrow.toISOString().slice(0, 10)}T19:00:00`;
   const court = settings.courts.find((c) => c.is_public)?.name ?? "Cancha 1";
-  return sendBookingNotification({
-    kind: "reminder",
-    customerName: "Cliente de prueba",
-    court,
-    startsAt,
-    email,
-    reference: "SM-TEST00",
+  const templateKey = String(formData.get("template_key") ?? "booking_reminder");
+  const { templates } = await getNotificationData();
+  const template = templates.find(
+    (item) => item.key === templateKey && item.channel === "email" && item.is_active,
+  );
+  if (!template) {
+    return {
+      ok: false,
+      provider: isDemoMode() ? "demo" : "resend",
+      status: "no_template",
+      error: "Seleccioná una plantilla de email activa",
+    };
+  }
+
+  const dateLabel = new Date(startsAt).toLocaleDateString("es-AR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
   });
+  const timeLabel = "19:00";
+  const vars = {
+    complex: settings.complexName,
+    customer: "Cliente de prueba",
+    court,
+    date: dateLabel,
+    time: timeLabel,
+    detail: `Turno ${timeLabel} — ${court} (SM-TEST00)`,
+  };
+  const subject = template.subject
+    ? renderTemplate(template.subject, vars)
+    : `Prueba de plantilla · ${settings.complexName}`;
+  const html = wrapEmailHtml(
+    subject,
+    templateToHtml(renderTemplate(template.body, vars)),
+    settings.complexName,
+  );
+  const result = await sendEmail(email, subject, html);
+  return result.ok
+    ? { ok: true, provider: result.provider, status: "sent" }
+    : { ok: false, provider: result.provider, status: "failed", error: result.error };
 }
