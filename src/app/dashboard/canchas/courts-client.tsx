@@ -1,12 +1,23 @@
 "use client";
 
 import * as React from "react";
-import { Volleyball, Loader2, Plus, Sun, Moon } from "lucide-react";
+import { Volleyball, Loader2, Plus, Sun, Moon, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getSettingsData, type CourtView } from "@/services/settings";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const STATUS_BADGE: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   active: { label: "Activa", variant: "default" },
@@ -23,12 +34,27 @@ const SURFACE_STYLE: Record<string, string> = {
 export function CourtsClient() {
   const [courts, setCourts] = React.useState<CourtView[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [pendingStatus, setPendingStatus] = React.useState<{ id: string; status: CourtView["status"] } | null>(null);
 
   React.useEffect(() => {
     let cancelled = false;
     getSettingsData()
       .then((d) => {
-        if (!cancelled) setCourts(d.courts);
+        if (!cancelled) {
+          const saved = window.localStorage.getItem("sportmanager-demo-courts");
+          if (saved) {
+            try {
+              const parsed = JSON.parse(saved) as CourtView[];
+              if (Array.isArray(parsed)) {
+                setCourts(parsed);
+                return;
+              }
+            } catch {
+              window.localStorage.removeItem("sportmanager-demo-courts");
+            }
+          }
+          setCourts(d.courts);
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -36,15 +62,26 @@ export function CourtsClient() {
     return () => { cancelled = true; };
   }, []);
 
-  const cycleStatus = (id: string) => {
-    setCourts((prev) =>
-      prev.map((c) => {
-        if (c.id !== id) return c;
-        const next: CourtView["status"] =
-          c.status === "active" ? "maintenance" : c.status === "maintenance" ? "inactive" : "active";
-        return { ...c, status: next };
-      }),
-    );
+  const requestStatusChange = (court: CourtView) => {
+    const next: CourtView["status"] =
+      court.status === "active" ? "maintenance" : court.status === "maintenance" ? "inactive" : "active";
+    setPendingStatus({ id: court.id, status: next });
+  };
+
+  const confirmStatusChange = () => {
+    if (!pendingStatus) return;
+    setCourts((prev) => {
+      const nextCourts = prev.map((court) =>
+        court.id === pendingStatus.id ? { ...court, status: pendingStatus.status } : court,
+      );
+      window.localStorage.setItem("sportmanager-demo-courts", JSON.stringify(nextCourts));
+      return nextCourts;
+    });
+    const changedCourt = courts.find((court) => court.id === pendingStatus.id);
+    toast.success("Estado actualizado oficialmente", {
+      description: `${changedCourt?.name ?? "Cancha"} ahora figura como ${STATUS_BADGE[pendingStatus.status]?.label.toLowerCase()}. El cambio queda visible en este dashboard y la sesión demo.`,
+    });
+    setPendingStatus(null);
   };
 
   if (loading) {
@@ -113,7 +150,7 @@ export function CourtsClient() {
                   <span className="text-xs text-muted-foreground">
                     {c.is_public ? "Visible en el sitio público" : "Oculta del sitio público"}
                   </span>
-                  <Button variant="outline" size="sm" onClick={() => cycleStatus(c.id)}>
+                  <Button variant="outline" size="sm" onClick={() => requestStatusChange(c)}>
                     Cambiar estado
                   </Button>
                 </div>
@@ -122,6 +159,21 @@ export function CourtsClient() {
           );
         })}
       </div>
+      <AlertDialog open={pendingStatus !== null} onOpenChange={(open) => !open && setPendingStatus(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogMedia><AlertTriangle className="size-5 text-[color:var(--dashboard-attention)]" /></AlertDialogMedia>
+            <AlertDialogTitle>¿Confirmar cambio de estado?</AlertDialogTitle>
+            <AlertDialogDescription>
+              El estado se reflejará inmediatamente en el dashboard demo y quedará guardado para esta sesión.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmStatusChange}>Confirmar cambio</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

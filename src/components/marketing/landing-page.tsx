@@ -125,12 +125,12 @@ export function LandingPage() {
           <div className="marketing-court pointer-events-none absolute -right-40 bottom-0 hidden h-[420px] w-[720px] rotate-6 opacity-[0.10] lg:block" />
           <div className="relative mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-10">
             <div className="max-w-xl">
-              <div className="marketing-reveal mb-7 inline-flex items-center gap-2 rounded-full border border-[#c9f36a]/25 bg-[#c9f36a]/[0.08] px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-[#d9f99d]">
-                <span className="relative flex size-2"><span className="absolute inline-flex size-full animate-ping rounded-full bg-[#c9f36a] opacity-60" /><span className="relative inline-flex size-2 rounded-full bg-[#c9f36a]" /></span>
+              <div className="marketing-reveal mb-7 inline-flex items-center gap-2 rounded-full border border-[#d4af37]/35 bg-[#d4af37]/[0.08] px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-[#ead89b]">
+                <span className="relative flex size-2"><span className="absolute inline-flex size-full animate-ping rounded-full bg-[#d4af37] opacity-50" /><span className="relative inline-flex size-2 rounded-full bg-[#d4af37]" /></span>
                 Operación en tiempo real
               </div>
               <h1 className="marketing-reveal marketing-delay-1 max-w-2xl text-[clamp(3.2rem,7vw,6.5rem)] font-semibold leading-[0.92] tracking-[-0.075em]">
-                Tu complejo, <span className="bg-gradient-to-r from-[#c9f36a] to-[#9ed04f] bg-clip-text text-transparent">en juego.</span>
+                Tu complejo, <span className="bg-gradient-to-r from-[#d4af37] via-[#c9f36a] to-[#9ed04f] bg-clip-text text-transparent">en juego.</span>
               </h1>
               <p className="marketing-reveal marketing-delay-2 mt-7 max-w-lg text-base leading-7 text-white/55 sm:text-lg">
                 Reservas, pagos, clientes y equipo. SportManager convierte el caos de WhatsApp y Excel en un centro de operaciones que trabaja con vos.
