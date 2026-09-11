@@ -4,7 +4,7 @@ import { LandingPage } from "@/components/marketing/landing-page";
 export const metadata: Metadata = {
   title: "El sistema operativo digital de tu centro deportivo",
   description:
-    "SportManager/PlayHub centraliza reservas, pagos, clientes, equipo e históricos de Excel en una plataforma para operar tu centro deportivo: pádel, tenis, fútbol, natación y más.",
+    "SportManager/PlayHub centraliza reservas, pagos, clientes, equipo e históricos de Excel en una plataforma para operar tu centro deportivo: pádel, tenis, fútbol, rugby, hockey, básquet, vóley, natación, funcional y más.",
   openGraph: {
     title: "SportManager/PlayHub · Tu centro, en juego",
     description: "Reservas, pagos y operación de tu centro deportivo desde un solo lugar.",

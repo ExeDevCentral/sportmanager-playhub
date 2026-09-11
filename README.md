@@ -15,9 +15,10 @@ realmente detrás de un centro deportivo.
 
 Hay un lugar en el mundo, muy repetido en Argentina y cada vez más en toda
 Latinoamérica, donde el deporte dejó de ser un pasatiempo y pasó a ser una industria
-de fines de semana. Pádel, tenis, fútbol 5 y 11, rugby, atletismo, running, golf,
-kayak, remo, natación: cada uno con su espacio, su gente y su calendario. Y en cada
-uno de esos centros hay **una persona clave**: el dueño, el socio, o el encargado —
+de fines de semana. Pádel, tenis, tenis de mesa, squash, fútbol 5 y 11, futsal,
+rugby, hockey, básquet, vóley, handball, natación, kayak, remo, atletismo,
+running, golf, skate, escalada, funcional, yoga, crossfit: cada uno con su
+espacio, su gente y su calendario. Y en cada uno de esos centros hay **una persona clave**: el dueño, el socio, o el encargado —
 el **trabajador que gestiona todo**. Está en la ventanilla a las 9 de la mañana
 recibiendo al equipo que viene a jugar, y a la medianoche sigue contestando WhatsApp
 para armar la grilla del día siguiente.
@@ -83,16 +84,27 @@ La transformación no es cosmética: es **operativa y cultural**. El encargado p
 
 ## 3. Para quién es
 
-- **Cualquier centro deportivo**: pádel, tenis, fútbol 5 y 11, rugby, atletismo,
-  running, golf, kayak, remo, natación — y combos de varias disciplinas en un mismo
-  predio — que hoy se maneja con WhatsApp y Excel.
+- **Cualquier centro deportivo**: pádel, tenis, tenis de mesa, squash, fútbol 5 y
+  11, futsal, rugby, hockey (césped y patín), básquet, vóley (y beach vóley),
+  handball, natación, polo acuático, kayak, remo, surf/SUP, atletismo, running,
+  trail, golf, skate, patinaje, escalada y clases/estudios (funcional, crossfit,
+  spinning, pilates, yoga, artes marciales, boxeo) — y combos de varias
+  disciplinas en un mismo predio que hoy se manejan con WhatsApp y Excel.
 - **El trabajador/encargado** que gestiona todo y necesita un panel rápido, claro y
   que no lo traicione.
 - **Cadenas / múltiples sedes**: arquitectura multi-complejo, métricas y equipos
   separados por sede.
 - **Del deporte al territorio**: el modelo sirve para cualquier actividad que se
-  venda por tiempo y espacio; cada vertical nueva (canchas, clases, deportes
-  acuáticos) es configurable sobre el mismo esquema.
+  venda por tiempo y espacio; cada vertical nueva (canchas, pistas, andariveles,
+  aulas, clases, torneos, alquiler de espacios) es configurable sobre el mismo
+  esquema sin cambios de código.
+
+> **Multi-deporte por diseño**: el sistema no conoce de "canchas de pádel". Modela
+> **espacios** (cancha, pista, andarivel, aula, ring, tatami, playa de arena, salón),
+> **recursos** (luz, techo, superficie) y **turnos** vendibles por tiempo. Que un
+> predio venda pádel, fútbol 5, natación o yoga es solo una configuración de
+> `courts` + `rate_rules` + `operating_hours` en Supabase — el producto completo
+> (reservas, pagos, CRM, notificaciones, importación Excel y analítica) no cambia.
 
 ### Roles
 
@@ -289,5 +301,6 @@ npm run deploy:preview # preview en Vercel
 *SportManager/PlayHub — hecho para el trabajador que gestiona todo, con respeto por
 la persona que convierte un espacio en un negocio que crece.*
 
-*Pádel, tenis, fútbol, rugby, atletismo, running, golf, kayak, remo, natación — si se
-vende por tiempo y espacio, tiene lugar acá.*
+*Pádel, tenis, tenis de mesa, squash, fútbol 5 y 11, rugby, hockey, básquet, vóley,
+handball, natación, kayak, remo, atletismo, running, golf, skate, escalada,
+funcional, yoga, crossfit — si se vende por tiempo y espacio, tiene lugar acá.*

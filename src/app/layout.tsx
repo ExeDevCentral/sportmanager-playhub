@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     template: "%s · SportManager/PlayHub",
   },
   description:
-    "Reservas online, pagos, calendario multi-espacio, CRM, históricos de Excel y analítica para tu centro deportivo: pádel, tenis, fútbol, rugby, natación, kayak y más.",
+    "Reservas online, pagos, calendario multi-espacio, CRM, históricos de Excel y analítica para tu centro deportivo: pádel, tenis, tenis de mesa, squash, fútbol, rugby, hockey, básquet, vóley, handball, natación, kayak, remo, atletismo, running, golf, funcional y más.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
