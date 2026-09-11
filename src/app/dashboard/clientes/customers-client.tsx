@@ -16,8 +16,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCurrency, formatNumber, formatDate } from "@/lib/format";
+import { downloadCSV } from "@/lib/csv";
 import { getCustomers, getCustomerHistory } from "@/services/customers";
 import type { CustomerStats, ReservationDetail, NotificationChannel } from "@/types/database";
+import { toast } from "sonner";
 
 const CHANNEL_LABEL: Record<NotificationChannel, string> = {
   email: "Email",
@@ -114,10 +116,37 @@ export function CustomersClient() {
           Cartera: {formatCurrency(totalSpent)}
         </Badge>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              downloadCSV(
+                "clientes.csv",
+                ["Nombre", "Apellido", "Email", "Teléfono", "Estado", "Reservas", "Gasto total"],
+                customers.map((c) => [
+                  c.first_name,
+                  c.last_name,
+                  c.email,
+                  c.phone,
+                  c.status,
+                  c.reservations_count,
+                  c.total_spent,
+                ]),
+              )
+            }
+          >
             Exportar a Excel
           </Button>
-          <Button size="sm">Nuevo cliente</Button>
+          <Button
+            size="sm"
+            onClick={() =>
+              toast.info("Nuevo cliente", {
+                description: "La alta de clientes se realiza desde reservas o importación en modo demo.",
+              })
+            }
+          >
+            Nuevo cliente
+          </Button>
         </div>
       </div>
 

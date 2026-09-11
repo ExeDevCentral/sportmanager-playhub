@@ -1,5 +1,5 @@
 import { isDemoMode } from "@/lib/demo";
-import { fetchBackend } from "@/lib/backend";
+import { fetchBackend, isBackendConfigured } from "@/lib/backend";
 import { mulberry32 } from "@/lib/random";
 import type { CalendarEvent, CalendarCourt, CalendarCustomer, Slot } from "@/lib/calendar-types";
 import type { ReservationStatus, ReservationKind } from "@/types/database";
@@ -106,10 +106,12 @@ export async function getCalendarEvents(
   weekStart: Date,
 ): Promise<{ events: CalendarEvent[]; courts: CalendarCourt[] }> {
   if (isDemoMode()) {
-    const remote = await fetchBackend<{ events: CalendarEvent[]; courts: CalendarCourt[] }>(
-      `/demo/calendar/events?start=${encodeURIComponent(weekStart.toISOString())}`
-    );
-    if (remote) return remote;
+    if (isBackendConfigured()) {
+      const remote = await fetchBackend<{ events: CalendarEvent[]; courts: CalendarCourt[] }>(
+        `/demo/calendar/events?start=${encodeURIComponent(weekStart.toISOString())}`
+      );
+      if (remote) return remote;
+    }
     return {
       events: generateDemoEvents(weekStart),
       courts: DEMO_COURTS,
@@ -124,10 +126,12 @@ export async function getAvailableSlots(
   date: string,
 ): Promise<Slot[]> {
   if (isDemoMode()) {
-    const remote = await fetchBackend<Slot[]>(
-      `/demo/calendar/slots?courtId=${encodeURIComponent(courtId)}&date=${encodeURIComponent(date)}`
-    );
-    if (remote) return remote;
+    if (isBackendConfigured()) {
+      const remote = await fetchBackend<Slot[]>(
+        `/demo/calendar/slots?courtId=${encodeURIComponent(courtId)}&date=${encodeURIComponent(date)}`
+      );
+      if (remote) return remote;
+    }
     return generateDemoSlots(courtId, date);
   }
   // TODO(Fase 5 real): llamar fn_available_slots
@@ -138,8 +142,10 @@ export async function getCustomers(
   _query?: string,
 ): Promise<CalendarCustomer[]> {
   if (isDemoMode()) {
-    const remote = await fetchBackend<CalendarCustomer[]>("/demo/calendar/customers");
-    if (remote) return remote;
+    if (isBackendConfigured()) {
+      const remote = await fetchBackend<CalendarCustomer[]>("/demo/calendar/customers");
+      if (remote) return remote;
+    }
     return DEMO_CUSTOMERS;
   }
   // TODO(Fase 5 real): buscar en customers

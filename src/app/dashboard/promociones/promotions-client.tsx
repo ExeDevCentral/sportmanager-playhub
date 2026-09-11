@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { getSettingsData, DAY_NAMES, type PromotionView } from "@/services/settings";
 import { formatNumber } from "@/lib/format";
+import { toast } from "sonner";
 
 const TYPE_LABEL: Record<PromotionView["discount_type"], string> = {
   percent: "Porcentaje",
@@ -46,7 +47,32 @@ export function PromotionsClient() {
             <p className="text-sm text-muted-foreground">Descuentos por día y franja horaria.</p>
           </div>
         </div>
-        <Button size="sm"><Plus className="mr-1 size-4" /> Nueva promoción</Button>
+        <Button
+          size="sm"
+          onClick={() => {
+            const id = `local-promotion-${Date.now()}`;
+            setPromotions((prev) => [
+              ...prev,
+              {
+                id,
+                name: "Nueva promoción",
+                description: "Promoción creada en modo demo.",
+                discount_type: "percent",
+                discount_value: 10,
+                applies_days: null,
+                valid_from: new Date().toISOString().slice(0, 10),
+                valid_to: null,
+                max_uses: null,
+                used_count: 0,
+                is_active: true,
+                is_public: false,
+              },
+            ]);
+            toast.success("Promoción creada", { description: "Podés activarla o desactivarla en esta sesión demo." });
+          }}
+        >
+          <Plus className="mr-1 size-4" /> Nueva promoción
+        </Button>
       </div>
 
       {loading ? (

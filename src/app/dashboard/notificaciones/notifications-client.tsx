@@ -290,10 +290,27 @@ export function NotificationsClient({ emailSetup }: { emailSetup: EmailSetup }) 
           </Card>
 
           <div className="mt-4 flex items-center justify-end gap-2">
-            <Button variant="outline" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                toast.info("Edición de plantillas", {
+                  description: "La edición avanzada de plantillas estará disponible en la próxima versión.",
+                })
+              }
+            >
               <Pencil className="mr-1 size-4" /> Editar plantillas
             </Button>
-            <Button size="sm">Guardar configuración</Button>
+            <Button
+              size="sm"
+              onClick={() =>
+                toast.success("Configuración guardada", {
+                  description: "Los cambios quedan aplicados en esta sesión demo.",
+                })
+              }
+            >
+              Guardar configuración
+            </Button>
           </div>
         </TabsContent>
       </Tabs>

@@ -1,5 +1,5 @@
 import { isDemoMode } from "@/lib/demo";
-import { fetchBackend } from "@/lib/backend";
+import { fetchBackend, isBackendConfigured } from "@/lib/backend";
 import type { CustomerStats, CustomerStatus, NotificationChannel } from "@/types/database";
 import type { ReservationDetail } from "@/types/database";
 
@@ -118,8 +118,10 @@ function getDemoHistory(customerId: string): ReservationDetail[] {
 
 export async function getCustomers(): Promise<CustomerStats[]> {
   if (isDemoMode()) {
-    const remote = await fetchBackend<CustomerStats[]>("/demo/customers");
-    if (remote) return remote;
+    if (isBackendConfigured()) {
+      const remote = await fetchBackend<CustomerStats[]>("/demo/customers");
+      if (remote) return remote;
+    }
     return getDemoCustomers();
   }
   // TODO(Fase 8 real): query v_customer_stats
@@ -128,10 +130,12 @@ export async function getCustomers(): Promise<CustomerStats[]> {
 
 export async function getCustomerHistory(customerId: string): Promise<ReservationDetail[]> {
   if (isDemoMode()) {
-    const remote = await fetchBackend<ReservationDetail[]>(
-      `/demo/customers/${encodeURIComponent(customerId)}/history`
-    );
-    if (remote) return remote;
+    if (isBackendConfigured()) {
+      const remote = await fetchBackend<ReservationDetail[]>(
+        `/demo/customers/${encodeURIComponent(customerId)}/history`
+      );
+      if (remote) return remote;
+    }
     return getDemoHistory(customerId);
   }
   // TODO(Fase 8 real): query v_reservations_detail

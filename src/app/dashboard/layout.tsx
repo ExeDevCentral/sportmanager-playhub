@@ -53,10 +53,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   return (
-    <div className="relative min-h-svh bg-[radial-gradient(62%_38%_at_88%_-2%,rgba(201,243,106,0.35),transparent_62%)] text-foreground">
+    <div className="dashboard-shell relative min-h-svh bg-background text-foreground">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(122,160,74,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(122,160,74,0.07)_1px,transparent_1px)] bg-[size:46px_46px]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(62%_38%_at_88%_-2%,rgba(201,243,106,0.18),transparent_62%),linear-gradient(rgba(201,243,106,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(201,243,106,0.06)_1px,transparent_1px)] bg-[size:auto,46px_46px,46px_46px]"
       />
       <div className="relative z-10 flex min-h-svh">
         <Sidebar role={role} className="sticky top-0 z-30 hidden h-svh lg:flex lg:flex-col" />

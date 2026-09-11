@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { getSettingsData, DAY_NAMES, type OperatingHourView } from "@/services/settings";
+import { toast } from "sonner";
 
 export function HoursClient() {
   const [hours, setHours] = React.useState<OperatingHourView[]>([]);
@@ -79,7 +80,9 @@ export function HoursClient() {
             ))}
           </CardContent>
           <CardFooter className="justify-end">
-            <Button size="sm">Guardar horarios</Button>
+            <Button size="sm" onClick={() => toast.success("Horarios guardados", { description: "Los cambios quedan aplicados en esta sesión demo." })}>
+              Guardar horarios
+            </Button>
           </CardFooter>
         </Card>
       )}

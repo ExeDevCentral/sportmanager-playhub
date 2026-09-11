@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getSettingsData, type CourtView } from "@/services/settings";
+import { toast } from "sonner";
 
 const STATUS_BADGE: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   active: { label: "Activa", variant: "default" },
@@ -64,7 +65,28 @@ export function CourtsClient() {
             <p className="text-sm text-muted-foreground">Superficie, estado y visibilidad pública.</p>
           </div>
         </div>
-        <Button size="sm"><Plus className="mr-1 size-4" /> Agregar cancha</Button>
+        <Button
+          size="sm"
+          onClick={() => {
+            setCourts((prev) => [
+              ...prev,
+              {
+                id: `local-court-${Date.now()}`,
+                name: `Cancha ${prev.length + 1}`,
+                description: "Cancha creada en modo demo.",
+                surface: "Techada",
+                is_indoor: true,
+                has_lighting: true,
+                status: "active",
+                is_public: false,
+                position: prev.length + 1,
+              },
+            ]);
+            toast.success("Cancha agregada", { description: "La nueva cancha queda disponible en esta sesión demo." });
+          }}
+        >
+          <Plus className="mr-1 size-4" /> Agregar cancha
+        </Button>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

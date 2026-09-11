@@ -1,6 +1,6 @@
 import { isDemoMode } from "@/lib/demo";
 import { getDemoDashboard, type DashboardData } from "@/lib/demo-data";
-import { fetchBackend } from "@/lib/backend";
+import { fetchBackend, isBackendConfigured } from "@/lib/backend";
 
 /**
  * KPIs del home del dashboard.
@@ -10,8 +10,10 @@ import { fetchBackend } from "@/lib/backend";
  */
 export async function getDashboardData(): Promise<DashboardData> {
   if (isDemoMode()) {
-    const remote = await fetchBackend<DashboardData>("/demo/dashboard-data");
-    if (remote) return remote;
+    if (isBackendConfigured()) {
+      const remote = await fetchBackend<DashboardData>("/demo/dashboard-data");
+      if (remote) return remote;
+    }
     return getDemoDashboard();
   }
   // TODO(Fase 4 real): conectar Supabase

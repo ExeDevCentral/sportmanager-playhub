@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { getSettingsData, type RateView } from "@/services/settings";
 import { formatCurrency } from "@/lib/format";
+import { toast } from "sonner";
 
 export function RatesClient() {
   const [rates, setRates] = React.useState<RateView[]>([]);
@@ -40,7 +41,26 @@ export function RatesClient() {
             <p className="text-sm text-muted-foreground">Tarifas por cancha, día y franja horaria.</p>
           </div>
         </div>
-        <Button size="sm"><Plus className="mr-1 size-4" /> Agregar tarifa</Button>
+        <Button
+          size="sm"
+          onClick={() =>
+            setRates((prev) => [
+              ...prev,
+              {
+                id: `local-rate-${Date.now()}`,
+                court_id: null,
+                name: "Nueva tarifa",
+                day_of_week: null,
+                starts_from: "09:00",
+                ends_to: "23:00",
+                price: 14000,
+                is_active: true,
+              },
+            ])
+          }
+        >
+          <Plus className="mr-1 size-4" /> Agregar tarifa
+        </Button>
       </div>
 
       {loading ? (
@@ -92,7 +112,9 @@ export function RatesClient() {
             <p className="text-xs text-muted-foreground">
               Ej: {rates[0] ? `${rates[0].name ?? "Tarifa"} = ${formatCurrency(rates[0].price)}` : ""}
             </p>
-            <Button size="sm">Guardar tarifas</Button>
+            <Button size="sm" onClick={() => toast.success("Tarifas guardadas", { description: "Los cambios quedan aplicados en esta sesión demo." })}>
+              Guardar tarifas
+            </Button>
           </CardFooter>
         </Card>
       )}
