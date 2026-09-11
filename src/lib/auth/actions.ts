@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isDemoMode } from "@/lib/demo";
-import { DEMO_ACCOUNT, DEMO_OPERATOR_ACCOUNT, DEMO_SESSION_COOKIE, DEMO_SESSION_VALUE, DEMO_ROLE_COOKIE, isDemoRole, type DemoRole } from "@/lib/auth/demo-account";
+import { DEMO_ACCOUNT, DEMO_OPERATOR_ACCOUNT, DEMO_PLATFORM_ACCOUNT, DEMO_SESSION_COOKIE, DEMO_SESSION_VALUE, DEMO_ROLE_COOKIE, isDemoRole, type DemoRole } from "@/lib/auth/demo-account";
 import {
   magicLinkSchema,
   signInSchema,
@@ -35,7 +35,9 @@ export async function demoSignIn(
       ? DEMO_ACCOUNT
       : email === DEMO_OPERATOR_ACCOUNT.email && password === DEMO_OPERATOR_ACCOUNT.password
         ? DEMO_OPERATOR_ACCOUNT
-        : null;
+        : email === DEMO_PLATFORM_ACCOUNT.email && password === DEMO_PLATFORM_ACCOUNT.password
+          ? DEMO_PLATFORM_ACCOUNT
+          : null;
   if (!matched) {
     return { error: "Email o contraseña demo incorrectos" };
   }
@@ -59,7 +61,7 @@ export async function demoSignIn(
   redirect("/dashboard");
 }
 
-/** Cambia el perfil demo (dueño ↔ operador) sin volver al login. */
+/** Cambia el perfil demo (dueño / operador / plataforma) sin volver al login. */
 export async function setDemoRole(role: DemoRole): Promise<void> {
   if (!isDemoMode() || !isDemoRole(role)) {
     redirect("/login");

@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { downloadCSV } from "@/lib/csv";
+import { sendBookingNotification } from "@/lib/notifications/actions";
 import type { CalendarCourt, CalendarEvent } from "@/lib/calendar-types";
 import type { ReservationStatus } from "@/types/database";
 
@@ -71,6 +72,18 @@ function formatTime(iso: string): string {
 
 function customerName(event: CalendarEvent): string {
   return event.customer_name ?? "Sin cliente";
+}
+
+function customerEmail(event: CalendarEvent): string {
+  const base = (event.customer_name ?? "cliente")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z ]/g, "")
+    .trim()
+    .replace(/\s+/g, ".")
+    .replace(/\.+/g, ".");
+  return `${base || "cliente"}@mail.com`;
 }
 
 export function ReservationsClient({
@@ -119,10 +132,21 @@ export function ReservationsClient({
     const ev = events.find((e) => e.id === id);
     if (!ev) return;
     setLoading(true);
-    setTimeout(() => {
+    setTimeout(async () => {
       setEvents((prev) => prev.map((e) => (e.id === id ? { ...e, status: "confirmed" as const } : e)));
       setLoading(false);
       toast.success("Reserva confirmada", { description: label({ ...ev, status: "confirmed" }) });
+      const res = await sendBookingNotification({
+        kind: "confirmed",
+        customerName: customerName(ev),
+        court: ev.court_name,
+        startsAt: ev.starts_at,
+        email: customerEmail(ev),
+        reference: ev.id,
+      });
+      if (!res.ok && res.provider === "resend" && res.status === "failed") {
+        toast.error("El email de confirmación no pudo enviarse", { description: res.error });
+      }
     }, 350);
   };
 
@@ -147,7 +171,7 @@ export function ReservationsClient({
     const ev = events.find((e) => e.id === id);
     if (!ev) return;
     setLoading(true);
-    setTimeout(() => {
+    setTimeout(async () => {
       setEvents((prev) =>
         prev.map((e) => (e.id === id ? { ...e, paid_amount: e.price } : e)),
       );
@@ -155,6 +179,17 @@ export function ReservationsClient({
       toast.success("Pago registrado", {
         description: `${formatCurrency(ev.price)} · ${customerName(ev)}`,
       });
+      const res = await sendBookingNotification({
+        kind: "paid",
+        customerName: customerName(ev),
+        court: ev.court_name,
+        startsAt: ev.starts_at,
+        email: customerEmail(ev),
+        reference: ev.id,
+      });
+      if (!res.ok && res.provider === "resend" && res.status === "failed") {
+        toast.error("El comprobante de pago no pudo enviarse", { description: res.error });
+      }
     }, 350);
   };
 
@@ -162,7 +197,7 @@ export function ReservationsClient({
     if (!cancelTarget) return;
     const ev = cancelTarget;
     setLoading(true);
-    setTimeout(() => {
+    setTimeout(async () => {
       setEvents((prev) =>
         prev.map((e) => (e.id === ev.id ? { ...e, status: "cancelled" as const } : e)),
       );
@@ -174,6 +209,17 @@ export function ReservationsClient({
           ? `${customerName(ev)} · ${cancelReason.trim()}`
           : customerName(ev),
       });
+      const res = await sendBookingNotification({
+        kind: "cancelled",
+        customerName: customerName(ev),
+        court: ev.court_name,
+        startsAt: ev.starts_at,
+        email: customerEmail(ev),
+        reference: ev.id,
+      });
+      if (!res.ok && res.provider === "resend" && res.status === "failed") {
+        toast.error("El email de cancelación no pudo enviarse", { description: res.error });
+      }
     }, 350);
   };
 

@@ -7,6 +7,7 @@ import {
   Clock,
   CreditCard,
   FileSpreadsheet,
+  Globe2,
   History,
   LayoutDashboard,
   Percent,
@@ -35,6 +36,10 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "General",
     items: [{ title: "Dashboard", href: "/dashboard", icon: LayoutDashboard }],
+  },
+  {
+    label: "Plataforma",
+    items: [{ title: "Estado general", href: "/dashboard/plataforma", icon: Globe2, roles: ["platform"] }],
   },
   {
     label: "Reservas",

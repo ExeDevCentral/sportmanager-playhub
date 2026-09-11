@@ -27,7 +27,7 @@ export async function getActiveRole(): Promise<DemoRole> {
     .select("platform_role")
     .eq("id", user.id)
     .maybeSingle();
-  if (profile?.platform_role === "platform_admin") return "owner";
+  if (profile?.platform_role === "platform_admin") return "platform";
 
   const { data: member } = await supabase
     .from("complex_members")

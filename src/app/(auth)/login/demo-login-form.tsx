@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useActionState } from "react";
-import { Crown, KeyRound, Loader2, LogIn, UserCog } from "lucide-react";
+import { Crown, Globe2, KeyRound, Loader2, LogIn, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { demoSignIn, type AuthState } from "@/lib/auth/actions";
-import { DEMO_ACCOUNT, DEMO_OPERATOR_ACCOUNT, DEMO_ROLE_SHORT, type DemoRole } from "@/lib/auth/demo-account";
+import { DEMO_ACCOUNT, DEMO_OPERATOR_ACCOUNT, DEMO_PLATFORM_ACCOUNT, DEMO_ROLE_SHORT, type DemoRole } from "@/lib/auth/demo-account";
 import { cn } from "@/lib/utils";
 
 export function DemoLoginForm() {
@@ -15,7 +15,8 @@ export function DemoLoginForm() {
   const [role, setRole] = useState<DemoRole>("owner");
 
   const isOwner = role === "owner";
-  const account = isOwner ? DEMO_ACCOUNT : DEMO_OPERATOR_ACCOUNT;
+  const isPlatform = role === "platform";
+  const account = isOwner ? DEMO_ACCOUNT : isPlatform ? DEMO_PLATFORM_ACCOUNT : DEMO_OPERATOR_ACCOUNT;
 
   return (
     <div className="grid gap-4">
@@ -60,15 +61,31 @@ export function DemoLoginForm() {
               onClick={() => setRole("operator")}
               className={cn(
                 "flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition-colors",
-                !isOwner ? "border-primary/60 bg-primary/10" : "border-border hover:bg-muted"
+                !isOwner && !isPlatform ? "border-primary/60 bg-primary/10" : "border-border hover:bg-muted"
               )}
             >
               <span className="flex items-center gap-1.5 text-sm font-medium">
-                <UserCog className={cn("size-4", !isOwner ? "text-primary" : "text-muted-foreground")} />
+                <UserCog className={cn("size-4", !isOwner && !isPlatform ? "text-primary" : "text-muted-foreground")} />
                 {DEMO_ROLE_SHORT.operator}
               </span>
               <span className="text-[11px] leading-snug text-muted-foreground">
                 Día a día: calendario, reservas, clientes, pagos y reportes.
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole("platform")}
+              className={cn(
+                "col-span-2 flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition-colors",
+                isPlatform ? "border-primary/60 bg-primary/10" : "border-border hover:bg-muted"
+              )}
+            >
+              <span className="flex items-center gap-1.5 text-sm font-medium">
+                <Globe2 className={cn("size-4", isPlatform ? "text-primary" : "text-muted-foreground")} />
+                {DEMO_ROLE_SHORT.platform}
+              </span>
+              <span className="text-[11px] leading-snug text-muted-foreground">
+                Staff de SportManager: todos los complejos y su estado general.
               </span>
             </button>
           </div>
@@ -102,8 +119,8 @@ export function DemoLoginForm() {
           Entrar al panel como {DEMO_ROLE_SHORT[role]}
         </Button>
         <p className="text-center text-xs text-muted-foreground">
-          {DEMO_ACCOUNT.email} · {DEMO_ACCOUNT.password} — dueño ·{" "}
-          {DEMO_OPERATOR_ACCOUNT.email} — operador
+          {DEMO_ACCOUNT.email} — dueño · {DEMO_OPERATOR_ACCOUNT.email} — operador ·{" "}
+          {DEMO_PLATFORM_ACCOUNT.email} — plataforma
         </p>
       </form>
     </div>

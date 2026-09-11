@@ -2,15 +2,22 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { isDemoMode } from "@/lib/demo";
 import { createClient } from "@/lib/supabase/server";
-import { DEMO_ACCOUNT, DEMO_SESSION_COOKIE, DEMO_SESSION_VALUE } from "@/lib/auth/demo-account";
+import { DEMO_ACCOUNT, DEMO_OPERATOR_ACCOUNT, DEMO_PLATFORM_ACCOUNT, DEMO_SESSION_COOKIE, DEMO_SESSION_VALUE } from "@/lib/auth/demo-account";
 import { getActiveRole } from "@/lib/auth/role";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { Topbar, type TopbarUser } from "@/components/dashboard/topbar";
 
 export const dynamic = "force-dynamic";
 
+const DEMO_USER_BY_ROLE = {
+  owner: DEMO_ACCOUNT,
+  operator: DEMO_OPERATOR_ACCOUNT,
+  platform: DEMO_PLATFORM_ACCOUNT,
+};
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const demo = isDemoMode();
+  const role = await getActiveRole();
   let user: TopbarUser | null = null;
 
   if (demo) {
@@ -19,7 +26,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
     if (session !== DEMO_SESSION_VALUE) {
       redirect("/login?next=/dashboard");
     }
-    user = { name: DEMO_ACCOUNT.name, email: DEMO_ACCOUNT.email };
+    const account = DEMO_USER_BY_ROLE[role];
+    user = { name: account.name, email: account.email };
   } else {
     const supabase = await createClient();
     const {
@@ -43,8 +51,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
       avatarUrl: profile?.avatar_url ?? undefined,
     };
   }
-
-  const role = await getActiveRole();
 
   return (
     <div className="relative min-h-svh bg-[radial-gradient(62%_38%_at_88%_-2%,rgba(201,243,106,0.35),transparent_62%)] text-foreground">

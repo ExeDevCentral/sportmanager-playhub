@@ -15,12 +15,18 @@ export function SidebarContent({
 }) {
   const pathname = usePathname();
 
-  const groups = role
-    ? NAV_GROUPS.map((group) => ({
-        ...group,
-        items: group.items.filter((item) => !item.roles || item.roles.includes(role)),
-      })).filter((g) => g.items.length > 0)
-    : NAV_GROUPS;
+  const groups =
+    role === "platform"
+      ? NAV_GROUPS.filter((g) => g.items.some((item) => item.roles?.includes("platform"))).map((group) => ({
+          ...group,
+          items: group.items.filter((item) => item.roles?.includes("platform")),
+        }))
+      : role
+        ? NAV_GROUPS.map((group) => ({
+            ...group,
+            items: group.items.filter((item) => !item.roles || item.roles.includes(role)),
+          })).filter((g) => g.items.length > 0)
+        : NAV_GROUPS;
 
   return (
     <div className="flex h-full flex-col">

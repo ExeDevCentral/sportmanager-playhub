@@ -1,10 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { Bell, Mail, MessageCircle, Loader2, Pencil } from "lucide-react";
+import { useActionState } from "react";
+import { Bell, Mail, MessageCircle, Loader2, Pencil, Send } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -16,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatDate } from "@/lib/format";
+import { sendTestEmail } from "@/lib/notifications/actions";
 import {
   getNotificationData,
   type NotificationTemplate,
@@ -23,6 +27,13 @@ import {
   type NotificationSettings,
 } from "@/services/notifications";
 import type { NotificationStatus } from "@/types/database";
+
+type EmailSetup = {
+  configured: boolean;
+  demo: boolean;
+  fromName: string;
+  fromEmail: string;
+};
 
 const STATUS_VARIANT: Record<NotificationStatus, "default" | "secondary" | "destructive" | "outline"> = {
   sent: "default",
@@ -52,11 +63,20 @@ const STATUS_LABEL: Record<NotificationStatus, string> = {
   skipped: "Omitido",
 };
 
-export function NotificationsClient() {
+export function NotificationsClient({ emailSetup }: { emailSetup: EmailSetup }) {
   const [templates, setTemplates] = React.useState<NotificationTemplate[]>([]);
   const [records, setRecords] = React.useState<NotificationRecord[]>([]);
   const [settings, setSettings] = React.useState<NotificationSettings | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const [testState, testAction, testPending] = useActionState(sendTestEmail, null);
+
+  React.useEffect(() => {
+    if (testState?.ok) {
+      toast.success(`Email de prueba enviado (${testState.provider})`);
+    } else if (testState) {
+      toast.error("El email de prueba no se pudo enviar", { description: testState.error });
+    }
+  }, [testState]);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -96,8 +116,38 @@ export function NotificationsClient() {
           <TabsTrigger value="settings">Configuración</TabsTrigger>
         </TabsList>
 
-        {/* ── Plantillas ── */}
+        {/* ── Plantillas (+ proveedor de email) ── */}
         <TabsContent value="templates" className="mt-4">
+          <Card className="mb-4 border-emerald-600/20 bg-emerald-600/[0.04]">
+            <CardHeader className="flex-row items-start justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Send className="size-4" /> Proveedor de email
+                </CardTitle>
+                <CardDescription className="mt-1.5">
+                  {emailSetup.demo
+                    ? "En modo demo el envío se simula (no sale ningún correo real)."
+                    : emailSetup.configured
+                      ? `Resend conectado · ${emailSetup.fromName} <${emailSetup.fromEmail}>`
+                      : "Falta RESEND_API_KEY para habilitar el envío real."}
+                </CardDescription>
+              </div>
+              <Badge
+                variant={emailSetup.demo ? "secondary" : emailSetup.configured ? "default" : "outline"}
+              >
+                {emailSetup.demo ? "Demo" : emailSetup.configured ? "Conectado" : "Sin configurar"}
+              </Badge>
+            </CardHeader>
+            <CardContent>
+              <form action={testAction} className="flex max-w-md gap-2">
+                <Input name="email" type="email" placeholder="tu@email.com" required aria-label="Email de prueba" />
+                <Button type="submit" disabled={testPending} size="sm">
+                  {testPending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+                  Probar envío
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
           {loading ? (
             <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">
               <Loader2 className="mr-2 size-4 animate-spin" /> Cargando plantillas…

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Crown, LogOut, Menu, FlaskConical, UserCog } from "lucide-react";
+import { Crown, Globe2, LogOut, Menu, FlaskConical, UserCog } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -70,10 +70,18 @@ export function Topbar({
 
       {role && (
         <Badge
-          variant={role === "owner" ? "default" : "secondary"}
-          className={`gap-1 ${role === "owner" ? "bg-primary/10 text-primary" : ""}`}
+          variant={role === "platform" ? "outline" : "secondary"}
+          className={`gap-1 ${
+            role === "owner" ? "bg-primary/10 text-primary" : role === "platform" ? "border-violet-600/30 bg-violet-600/10 text-violet-700 dark:text-violet-300" : ""
+          }`}
         >
-          {role === "owner" ? <Crown className="size-3" /> : <UserCog className="size-3" />}
+          {role === "owner" ? (
+            <Crown className="size-3" />
+          ) : role === "platform" ? (
+            <Globe2 className="size-3" />
+          ) : (
+            <UserCog className="size-3" />
+          )}
           {DEMO_ROLE_LABEL[role]}
         </Badge>
       )}
@@ -106,20 +114,23 @@ export function Topbar({
             <DropdownMenuSeparator />
             {demo && (
               <>
-                {role === "operator" ? (
-<DropdownMenuItem
-                  onClick={() => setDemoRole("owner")}
-                >
-                  <Crown className="size-4" />
-                  Ver como Admin Dueño
-                </DropdownMenuItem>
-                ) : (
-<DropdownMenuItem
-                  onClick={() => setDemoRole("operator")}
-                >
-                  <UserCog className="size-4" />
-                  Ver como Admin Operador
-                </DropdownMenuItem>
+                {role !== "owner" && (
+                  <DropdownMenuItem onClick={() => setDemoRole("owner")}>
+                    <Crown className="size-4" />
+                    Ver como Admin Dueño
+                  </DropdownMenuItem>
+                )}
+                {role !== "operator" && (
+                  <DropdownMenuItem onClick={() => setDemoRole("operator")}>
+                    <UserCog className="size-4" />
+                    Ver como Admin Operador
+                  </DropdownMenuItem>
+                )}
+                {role !== "platform" && (
+                  <DropdownMenuItem onClick={() => setDemoRole("platform")}>
+                    <Globe2 className="size-4" />
+                    Ver como Admin Plataforma
+                  </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
               </>

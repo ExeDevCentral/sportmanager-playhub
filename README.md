@@ -4,7 +4,7 @@
 > Reservas, pagos, clientes, equipo y Excel — en un solo centro de operaciones.
 
 **Vivo en producción:** https://sportmanager-playhub.vercel.app
-**Acceso demo:** `demo@sportmanager.app` / `operador@sportmanager.app` · clave `playhub2026`
+**Acceso demo:** `demo@sportmanager.app` / `operador@sportmanager.app` / `platform@sportmanager.app` · clave `playhub2026`
 
 ---
 
@@ -100,11 +100,12 @@ La transformación no es cosmética: es **operativa y cultural**. El encargado p
 |---|---|---|
 | **Admin Dueño** (`complex_owner`) | El que decide el negocio | Todo: precios, promociones, analítica, históricos, importación y configuración |
 | **Admin Operador** (`complex_admin`) | El encargado del día a día | Operación: dashboard, calendario, reservas, clientes, pagos y reportes |
+| **Admin Plataforma** (`platform_admin`) | El staff de SportManager | Todos los complejos: estado general, ocupación, ingresos y acceso como dueño |
 
 La regla se aplica en dos capas: **UI** (el sidebar solo muestra lo del rol) y
 **servidor** (las rutas de dueño redirigen si el rol no alcanza). En PostgreSQL la
 misma lógica vive en `fn_has_complex_role` + políticas RLS (0009), con
-`complex_owner`/`complex_admin`/`staff`.
+`complex_owner`/`complex_admin`/`staff`, y `platform_role` para el equipo de la plataforma.
 
 ---
 
@@ -195,6 +196,7 @@ Sin Supabase, el login pide una cuenta hardcodeada (`src/lib/auth/demo-account.t
 ```
 Admin Dueño  ·  demo@sportmanager.app   ·  playhub2026  ·  Martina Demo
 Admin Operador  ·  operador@sportmanager.app  ·  playhub2026  ·  Ramiro Operador
+Admin Plataforma  ·  platform@sportmanager.app  ·  playhub2026  ·  Débora Plataforma
 ```
 
 Elegís el perfil en el login (o cambiás en el menú del avatar). La cuenta existe

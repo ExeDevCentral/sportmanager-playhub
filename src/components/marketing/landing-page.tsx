@@ -136,7 +136,10 @@ export function LandingPage() {
                 Reservas, pagos, clientes y equipo. SportManager convierte el caos de WhatsApp y Excel en un centro de operaciones que trabaja con vos.
               </p>
               <div className="marketing-reveal marketing-delay-3 mt-9 flex flex-col gap-3 sm:flex-row">
-                <a href="#demo" className="marketing-btn-primary marketing-btn-glow group inline-flex min-h-12 items-center justify-center gap-3 rounded-full px-6 text-sm">
+                <Link href="/reservar" className="marketing-btn-primary marketing-btn-glow group inline-flex min-h-12 items-center justify-center gap-3 rounded-full px-6 text-sm">
+                  Reservá tu turno <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+                <a href="#demo" className="marketing-btn-secondary group inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-medium">
                   Ver cómo funciona <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                 </a>
                 <Link href="/login" className="marketing-btn-secondary group inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-medium">
