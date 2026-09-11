@@ -1,0 +1,14 @@
+[
+  {
+    "timestamp": 1788958632360,
+    "totalGzipSize": 4030520,
+    "depCount": 24,
+    "vulnCount": 2
+  },
+  {
+    "timestamp": 1788968037209,
+    "totalGzipSize": 4030520,
+    "depCount": 24,
+    "vulnCount": 2
+  }
+]
