@@ -1,29 +1,32 @@
 # SportManager / PlayHub
 
-> El sistema operativo digital del complejo de pádel.
+> El sistema operativo digital de tu centro deportivo.
 > Reservas, pagos, clientes, equipo y Excel — en un solo centro de operaciones.
 
 **Vivo en producción:** https://sportmanager-playhub.vercel.app
-**Acceso demo:** `demo@sportmanager.app` · `playhub2026`
+**Acceso demo:** `demo@sportmanager.app` / `operador@sportmanager.app` · clave `playhub2026`
 
 ---
 
 ## 1. Manifiesto antropológico — por qué existe esto
 
 Este software no nació de una hoja de ruta de producto. Nació de observar quién está
-realmente detrás de un complejo de pádel.
+realmente detrás de un centro deportivo.
 
 Hay un lugar en el mundo, muy repetido en Argentina y cada vez más en toda
-Latinoamérica, donde el pádel dejó de ser un pasatiempo y pasó a ser una industria de
-fines de semana. Y en cada uno de esos complejos hay **una persona clave**: el dueño,
-el socio, o el encargado — el **trabajador que gestiona todo**. Está en la ventanilla a
-las 9 de la mañana recibiendo a la pareja que viene a jugar, y a la medianoche sigue
-contestando WhatsApp para armar la grilla del día siguiente.
+Latinoamérica, donde el deporte dejó de ser un pasatiempo y pasó a ser una industria
+de fines de semana. Pádel, tenis, fútbol 5 y 11, rugby, atletismo, running, golf,
+kayak, remo, natación: cada uno con su espacio, su gente y su calendario. Y en cada
+uno de esos centros hay **una persona clave**: el dueño, el socio, o el encargado —
+el **trabajador que gestiona todo**. Está en la ventanilla a las 9 de la mañana
+recibiendo al equipo que viene a jugar, y a la medianoche sigue contestando WhatsApp
+para armar la grilla del día siguiente.
 
 Esa persona vive una paradoja:
 
-- Su negocio es 100% **tiempo disponible**: si una cancha queda vacía en el horario
-  pico, esa plata se pierde para siempre. No se recupera mañana.
+- Su negocio es 100% **tiempo disponible**: si una cancha, una pista, un andarivel o
+  una clase queda vacío en el horario pico, esa plata se pierde para siempre. No se
+  recupera mañana.
 - Pero su herramienta de gestión es 100% **desorden**: un grupo de WhatsApp con
   mensajes de "¿me anotás para las 20?", una planilla de Excel que se actualiza cada
   tanto, papeles pegados en la ventanilla, y señas que se cobran "a ojo" y se
@@ -38,8 +41,8 @@ reservas confirmadas, pagos cobrados, clientes conocidos y decisiones tomadas co
 datos.
 
 > El valor que aportamos no es "digitalizar". Es **devolverle al trabajador el
-> control de su operación** — horas de sueño, decisiones con números y la cancha
-> siempre llena. Tecnología no como fetiche, sino como acto de respeto hacia quien
+> control de su operación** — horas de sueño, decisiones con números y el espacio
+> siempre lleno. Tecnología no como fetiche, sino como acto de respeto hacia quien
 > sostiene el negocio con las manos.
 
 ---
@@ -54,23 +57,24 @@ datos.
 | Cobrar la seña | Transferencia / efectivo | No hay registro, "lo anoto en un papel" |
 | Saber quién viene mañana | Memoria + papel | La grilla se cuece a fuego lento de madrugada |
 | Conocer a sus clientes | La cabeza | No distingue al que paga siempre del que no |
-| Tomar decisiones | Intuición | ¿Qué horario rinde? ¿qué cancha? ¿a quién premiar? |
+| Tomar decisiones | Intuición | ¿Qué horario rinde? ¿qué espacio? ¿a quién premiar? |
 | Migrar años de historia | Excel + archivadores | Datos viejos intocables, duplicados, sin estructura |
 
 ### En qué se convierte con SportManager
 
-La misma persona, con la misma cancha, ahora con un panel desde el que:
+La misma persona, con el mismo espacio, ahora con un panel desde el que:
 
-1. **Reserva** desde un calendario visual multic ancha: ve cada cancha, cada hora,
-   cada conflicto. La doble reserva es estructuralmente imposible.
+1. **Reserva** desde un calendario visual multi-espacio: ve cada cancha, pista,
+   andarivel o aula, cada hora, cada conflicto. La doble reserva es
+   estructuralmente imposible.
 2. **Cobra** con pagos que se confirman solos (Mercado Pago vía webhook) — nunca por
    la buena fe de un clic.
 3. **Gestiona clientes** con ficha completa: frecuencia, gasto total, preferencia de
-   canal (email o WhatsApp), cancha y horario favoritos.
+   canal (email o WhatsApp), espacio y horario favoritos.
 4. **Importa su historia**: años de Excel entran mapeando columnas, validando
    duplicados y limpiando el desorden antes de tocar la operación.
-5. **Mira el negocio**: ocupación por cancha, horarios más demandados, ingresos por
-   cancha y actividad reciente — todo en tiempo real.
+5. **Mira el negocio**: ocupación por espacio, horarios más demandados, ingresos por
+   espacio y actividad reciente — todo en tiempo real.
 
 La transformación no es cosmética: es **operativa y cultural**. El encargado pasa de
 "contestar mensajes" a "dirigir la operación".
@@ -79,13 +83,28 @@ La transformación no es cosmética: es **operativa y cultural**. El encargado p
 
 ## 3. Para quién es
 
-- **Complejos de pádel** (de 2 a 10+ canchas) que hoy se manejan con WhatsApp y Excel.
+- **Cualquier centro deportivo**: pádel, tenis, fútbol 5 y 11, rugby, atletismo,
+  running, golf, kayak, remo, natación — y combos de varias disciplinas en un mismo
+  predio — que hoy se maneja con WhatsApp y Excel.
 - **El trabajador/encargado** que gestiona todo y necesita un panel rápido, claro y
   que no lo traicione.
 - **Cadenas / múltiples sedes**: arquitectura multi-complejo, métricas y equipos
   separados por sede.
-- **Del pádel al resto del deporte**: el modelo sirve para tenis, fútbol 5 o padel
-  como primer vertical.
+- **Del deporte al territorio**: el modelo sirve para cualquier actividad que se
+  venda por tiempo y espacio; cada vertical nueva (canchas, clases, deportes
+  acuáticos) es configurable sobre el mismo esquema.
+
+### Roles
+
+| Rol | Quién | Acceso |
+|---|---|---|
+| **Admin Dueño** (`complex_owner`) | El que decide el negocio | Todo: precios, promociones, analítica, históricos, importación y configuración |
+| **Admin Operador** (`complex_admin`) | El encargado del día a día | Operación: dashboard, calendario, reservas, clientes, pagos y reportes |
+
+La regla se aplica en dos capas: **UI** (el sidebar solo muestra lo del rol) y
+**servidor** (las rutas de dueño redirigen si el rol no alcanza). En PostgreSQL la
+misma lógica vive en `fn_has_complex_role` + políticas RLS (0009), con
+`complex_owner`/`complex_admin`/`staff`.
 
 ---
 
@@ -93,11 +112,11 @@ La transformación no es cosmética: es **operativa y cultural**. El encargado p
 
 | Área | Qué hace |
 |---|---|
-| **Dashboard** | KPIs del día, reservas/ingresos/ocupación (30 días), agenda de hoy, histograma por cancha |
-| **Calendario** | Grilla semanal multi-cancha, crear/editar/cancelar reservas, slots disponibles |
+| **Dashboard** | KPIs del día, reservas/ingresos/ocupación (30 días), agenda de hoy, histograma por espacio |
+| **Calendario** | Grilla semanal multi-espacio, crear/editar/cancelar reservas, slots disponibles |
 | **Reservas** | Listado completo de turnos con estados de pago y acciones |
 | **Clientes (CRM)** | Ficha, historial, total gastado, canal preferido, favoritos, estados |
-| **Canchas** | Catálogo de canchas y control de estado |
+| **Espacios** | Catálogo de canchas/pistas/andariveles/clases y control de estado |
 | **Horarios / Precios / Promociones** | Tarifas, disponibilidad y descuentos |
 | **Pagos** | Confirmaciones vía webhook Mercado Pago (solo el backend marca "pagado") |
 | **Notificaciones** | Email y/o WhatsApp según la preferencia de cada cliente |
@@ -174,12 +193,13 @@ curl http://localhost:3000/api/backend/demo/dashboard-data   # a través del pro
 Sin Supabase, el login pide una cuenta hardcodeada (`src/lib/auth/demo-account.ts`):
 
 ```
-Email:       demo@sportmanager.app
-Contraseña:  playhub2026
+Admin Dueño  ·  demo@sportmanager.app   ·  playhub2026  ·  Martina Demo
+Admin Operador  ·  operador@sportmanager.app  ·  playhub2026  ·  Ramiro Operador
 ```
 
-La cuenta existe solo en demo; al conectar Supabase el login vuelve a ser el real
-(Google / Apple / email+clave / magic link).
+Elegís el perfil en el login (o cambiás en el menú del avatar). La cuenta existe
+solo en demo; al conectar Supabase el login vuelve a ser el real
+(Google / Apple / email+clave / magic link) y el rol sale de `complex_members`.
 
 ---
 
@@ -206,7 +226,7 @@ npm run deploy:preview    # vercel deploy
 │   │   ├── (auth)/login/        # Login demo / real
 │   │   ├── api/backend/[...path]# Proxy del navegador al mock backend
 │   │   ├── dashboard/           # Secciones del panel de operación
-│   │   └── page.tsx             # Landing (PaddleMatch, stroke-draw, demo)
+│   │   └── page.tsx             # Landing (stroke-draw, demo)
 │   ├── components/
 │   │   ├── marketing/           # Landing viva
 │   │   ├── dashboard/           # Sidebar, topbar, KPIs, charts
@@ -245,9 +265,10 @@ npm run deploy:preview    # vercel deploy
 | 7 · Notificaciones (email/WhatsApp, canal preferido) | ✅ |
 | 8 · CRM de clientes | ✅ |
 | 9 · Import/export de Excel | ✅ |
-| 10 · Landing v3 + paddle scene + demo | ✅ |
+| 10 · Landing v3 + demo | ✅ |
 | 11 · Rebrand SportManager/PlayHub + deploy Vercel + 2 servidores | ✅ |
-| 12 · Reservas (listado), Reportes, Analytics, Históricos | 🚧 en construcción |
+| 12 · Reservas (listado), Reportes, Analytics, Históricos | ✅ |
+| 13 · Dark/cyber, multi-deporte, accesos y pulido | 🚧 siguiente |
 
 ## 11. Scripts útiles
 
@@ -264,4 +285,7 @@ npm run deploy:preview # preview en Vercel
 ---
 
 *SportManager/PlayHub — hecho para el trabajador que gestiona todo, con respeto por
-la persona que convierte una cancha en un negocio que crece.*
+la persona que convierte un espacio en un negocio que crece.*
+
+*Pádel, tenis, fútbol, rugby, atletismo, running, golf, kayak, remo, natación — si se
+vende por tiempo y espacio, tiene lugar acá.*

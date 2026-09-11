@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isDemoMode } from "@/lib/demo";
-import { DEMO_ACCOUNT, DEMO_SESSION_COOKIE, DEMO_SESSION_VALUE } from "@/lib/auth/demo-account";
+import { DEMO_ACCOUNT, DEMO_OPERATOR_ACCOUNT, DEMO_SESSION_COOKIE, DEMO_SESSION_VALUE, DEMO_ROLE_COOKIE, isDemoRole, type DemoRole } from "@/lib/auth/demo-account";
 import {
   magicLinkSchema,
   signInSchema,
@@ -30,11 +30,43 @@ export async function demoSignIn(
   }
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
-  if (email !== DEMO_ACCOUNT.email || password !== DEMO_ACCOUNT.password) {
+  const matched =
+    email === DEMO_ACCOUNT.email && password === DEMO_ACCOUNT.password
+      ? DEMO_ACCOUNT
+      : email === DEMO_OPERATOR_ACCOUNT.email && password === DEMO_OPERATOR_ACCOUNT.password
+        ? DEMO_OPERATOR_ACCOUNT
+        : null;
+  if (!matched) {
     return { error: "Email o contraseña demo incorrectos" };
   }
+  const rawRole = String(formData.get("role") ?? matched.role) as DemoRole;
+  const role: DemoRole = isDemoRole(rawRole) ? rawRole : matched.role;
   const cookieStore = await cookies();
   cookieStore.set(DEMO_SESSION_COOKIE, DEMO_SESSION_VALUE, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30,
+  });
+  cookieStore.set(DEMO_ROLE_COOKIE, role, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30,
+  });
+  redirect("/dashboard");
+}
+
+/** Cambia el perfil demo (dueño ↔ operador) sin volver al login. */
+export async function setDemoRole(role: DemoRole): Promise<void> {
+  if (!isDemoMode() || !isDemoRole(role)) {
+    redirect("/login");
+    return;
+  }
+  const cookieStore = await cookies();
+  cookieStore.set(DEMO_ROLE_COOKIE, role, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -137,6 +169,7 @@ export async function signOut(): Promise<void> {
   if (isDemoMode()) {
     const cookieStore = await cookies();
     cookieStore.delete(DEMO_SESSION_COOKIE);
+    cookieStore.delete(DEMO_ROLE_COOKIE);
     redirect("/login");
     return;
   }

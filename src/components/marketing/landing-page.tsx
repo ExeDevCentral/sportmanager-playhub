@@ -255,7 +255,7 @@ export function LandingPage() {
       <footer className="border-t border-white/10 bg-[#0d1713] px-5 py-8 text-white sm:px-8">
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-5 text-xs text-white/45 sm:flex-row sm:items-center">
           <div className="flex items-center gap-2 text-sm font-semibold text-white"><span className="flex size-7 items-center justify-center rounded-lg bg-[#c9f36a] text-[#102016]"><Volleyball className="size-4" /></span>SportManager<span className="text-[#c9f36a]">/PlayHub</span></div>
-          <p>El sistema operativo digital de tu complejo de pádel.</p>
+          <p>El sistema operativo digital de tu centro deportivo.</p>
           <p>© 2026 SportManager · PlayHub</p>
         </div>
       </footer>

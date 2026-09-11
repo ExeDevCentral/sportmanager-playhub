@@ -1,18 +1,15 @@
 import type { Metadata } from "next";
-import { BarChart3 } from "lucide-react";
-import { SectionPlaceholder } from "@/components/dashboard/placeholder";
+import { getDashboardData } from "@/services/dashboard";
+import { getPaymentsData } from "@/services/payments";
+import { ReportesClient } from "./reportes-client";
 
 export const metadata: Metadata = {
   title: "Reportes",
 };
 
-export default function Page() {
-  return (
-    <SectionPlaceholder
-      title="Reportes"
-      description="Ingresos, ocupación y reservas por período, descargables en Excel."
-      phase={10}
-      icon={BarChart3}
-    />
-  );
+export const dynamic = "force-dynamic";
+
+export default async function ReportesPage() {
+  const [data, payments] = await Promise.all([getDashboardData(), getPaymentsData()]);
+  return <ReportesClient data={data} payments={payments} />;
 }

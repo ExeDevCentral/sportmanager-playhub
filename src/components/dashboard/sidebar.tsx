@@ -4,9 +4,23 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { NAV_GROUPS } from "./nav-config";
+import type { DemoRole } from "@/lib/auth/demo-account";
 
-export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+export function SidebarContent({
+  role,
+  onNavigate,
+}: {
+  role?: DemoRole;
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
+
+  const groups = role
+    ? NAV_GROUPS.map((group) => ({
+        ...group,
+        items: group.items.filter((item) => !item.roles || item.roles.includes(role)),
+      })).filter((g) => g.items.length > 0)
+    : NAV_GROUPS;
 
   return (
     <div className="flex h-full flex-col">
@@ -21,7 +35,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
-        {NAV_GROUPS.map((group) => (
+        {groups.map((group) => (
           <div key={group.label} className="mb-5">
             <p className="mb-1.5 px-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
               {group.label}
@@ -47,11 +61,6 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                     >
                       <Icon className="size-4 shrink-0" />
                       <span className="flex-1 truncate">{item.title}</span>
-                      {item.phase && !active && (
-                        <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                          F{item.phase}
-                        </span>
-                      )}
                     </Link>
                   </li>
                 );
@@ -64,10 +73,10 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-export function Sidebar({ className }: { className?: string }) {
+export function Sidebar({ role, className }: { role?: DemoRole; className?: string }) {
   return (
     <aside className={cn("w-60 shrink-0 border-r bg-card", className)}>
-      <SidebarContent />
+      <SidebarContent role={role} />
     </aside>
   );
 }

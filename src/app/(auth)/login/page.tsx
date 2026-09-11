@@ -25,7 +25,7 @@ export default function LoginPage() {
           SportManager
         </Link>
         <p className="text-sm text-muted-foreground">
-          El sistema operativo digital de tu complejo de pádel
+          El sistema operativo digital de tu centro deportivo
         </p>
       </div>
 

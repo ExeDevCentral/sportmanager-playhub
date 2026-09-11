@@ -1,18 +1,16 @@
 import type { Metadata } from "next";
-import { History } from "lucide-react";
-import { SectionPlaceholder } from "@/components/dashboard/placeholder";
+import { getReservationHistory } from "@/services/history";
+import { HistoricosClient } from "./historicos-client";
+import { requireDemoRole } from "@/lib/auth/role";
 
 export const metadata: Metadata = {
   title: "Históricos",
 };
 
-export default function Page() {
-  return (
-    <SectionPlaceholder
-      title="Históricos"
-      description="Consulta de datos históricos importados por año, cliente y cancha."
-      phase={9}
-      icon={History}
-    />
-  );
+export const dynamic = "force-dynamic";
+
+export default async function HistoricosPage() {
+  await requireDemoRole("owner");
+  const history = await getReservationHistory();
+  return <HistoricosClient initialHistory={history} />;
 }

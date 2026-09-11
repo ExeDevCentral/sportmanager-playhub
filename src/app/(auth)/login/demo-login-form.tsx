@@ -1,15 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { useActionState } from "react";
-import { Loader2, KeyRound, LogIn } from "lucide-react";
+import { Crown, KeyRound, Loader2, LogIn, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { demoSignIn, type AuthState } from "@/lib/auth/actions";
-import { DEMO_ACCOUNT } from "@/lib/auth/demo-account";
+import { DEMO_ACCOUNT, DEMO_OPERATOR_ACCOUNT, DEMO_ROLE_SHORT, type DemoRole } from "@/lib/auth/demo-account";
+import { cn } from "@/lib/utils";
 
 export function DemoLoginForm() {
   const [state, action, pending] = useActionState<AuthState, FormData>(demoSignIn, undefined);
+  const [role, setRole] = useState<DemoRole>("owner");
+
+  const isOwner = role === "owner";
+  const account = isOwner ? DEMO_ACCOUNT : DEMO_OPERATOR_ACCOUNT;
 
   return (
     <div className="grid gap-4">
@@ -18,7 +24,7 @@ export function DemoLoginForm() {
         <div>
           <p className="font-medium">Acceso demo</p>
           <p className="text-xs text-muted-foreground">
-            Sin Supabase conectado todavía: entrá al panel de operación con estas credenciales.
+            Sin Supabase conectado todavía: entrá al panel con un perfil de prueba.
           </p>
         </div>
       </div>
@@ -31,13 +37,52 @@ export function DemoLoginForm() {
 
       <form action={action} className="grid gap-4">
         <div className="grid gap-2">
+          <Label htmlFor="demo-email">Perfil demo</Label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setRole("owner")}
+              className={cn(
+                "flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition-colors",
+                isOwner ? "border-primary/60 bg-primary/10" : "border-border hover:bg-muted"
+              )}
+            >
+              <span className="flex items-center gap-1.5 text-sm font-medium">
+                <Crown className={cn("size-4", isOwner ? "text-primary" : "text-muted-foreground")} />
+                {DEMO_ROLE_SHORT.owner}
+              </span>
+              <span className="text-[11px] leading-snug text-muted-foreground">
+                Ve todo: precios, promociones, históricos y configuración.
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole("operator")}
+              className={cn(
+                "flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition-colors",
+                !isOwner ? "border-primary/60 bg-primary/10" : "border-border hover:bg-muted"
+              )}
+            >
+              <span className="flex items-center gap-1.5 text-sm font-medium">
+                <UserCog className={cn("size-4", !isOwner ? "text-primary" : "text-muted-foreground")} />
+                {DEMO_ROLE_SHORT.operator}
+              </span>
+              <span className="text-[11px] leading-snug text-muted-foreground">
+                Día a día: calendario, reservas, clientes, pagos y reportes.
+              </span>
+            </button>
+          </div>
+          <input type="hidden" name="role" value={role} />
+        </div>
+
+        <div className="grid gap-2">
           <Label htmlFor="demo-email">Email</Label>
           <Input
             id="demo-email"
             name="email"
             type="email"
             autoComplete="username"
-            defaultValue={DEMO_ACCOUNT.email}
+            defaultValue={account.email}
             required
           />
         </div>
@@ -48,16 +93,17 @@ export function DemoLoginForm() {
             name="password"
             type="text"
             autoComplete="current-password"
-            defaultValue={DEMO_ACCOUNT.password}
+            defaultValue={account.password}
             required
           />
         </div>
         <Button type="submit" disabled={pending} className="w-full">
           {pending ? <Loader2 className="size-4 animate-spin" /> : <LogIn className="size-4" />}
-          Entrar al panel
+          Entrar al panel como {DEMO_ROLE_SHORT[role]}
         </Button>
         <p className="text-center text-xs text-muted-foreground">
-          {DEMO_ACCOUNT.email} · {DEMO_ACCOUNT.password}
+          {DEMO_ACCOUNT.email} · {DEMO_ACCOUNT.password} — dueño ·{" "}
+          {DEMO_OPERATOR_ACCOUNT.email} — operador
         </p>
       </form>
     </div>

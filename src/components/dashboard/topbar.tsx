@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LogOut, Menu, FlaskConical } from "lucide-react";
+import { Crown, LogOut, Menu, FlaskConical, UserCog } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { signOut } from "@/lib/auth/actions";
+import { signOut, setDemoRole } from "@/lib/auth/actions";
+import { DEMO_ROLE_LABEL, DEMO_ROLE_SHORT, type DemoRole } from "@/lib/auth/demo-account";
 import { SidebarContent } from "./sidebar";
 
 export type TopbarUser = {
@@ -23,7 +24,15 @@ export type TopbarUser = {
   avatarUrl?: string;
 };
 
-export function Topbar({ user, demo }: { user: TopbarUser | null; demo: boolean }) {
+export function Topbar({
+  user,
+  demo,
+  role,
+}: {
+  user: TopbarUser | null;
+  demo: boolean;
+  role?: DemoRole;
+}) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const initials = (user?.name ?? "DE")
     .split(" ")
@@ -48,7 +57,7 @@ export function Topbar({ user, demo }: { user: TopbarUser | null; demo: boolean 
         </SheetTrigger>
         <SheetContent side="left" className="w-60 p-0">
           <SheetTitle className="sr-only">Navegación</SheetTitle>
-          <SidebarContent onNavigate={() => setMobileOpen(false)} />
+          <SidebarContent role={role} onNavigate={() => setMobileOpen(false)} />
         </SheetContent>
       </Sheet>
 
@@ -56,6 +65,16 @@ export function Topbar({ user, demo }: { user: TopbarUser | null; demo: boolean 
         <Badge variant="outline" className="gap-1 text-amber-600 dark:text-amber-400">
           <FlaskConical className="size-3" />
           Modo demo · datos simulados
+        </Badge>
+      )}
+
+      {role && (
+        <Badge
+          variant={role === "owner" ? "default" : "secondary"}
+          className={`gap-1 ${role === "owner" ? "bg-primary/10 text-primary" : ""}`}
+        >
+          {role === "owner" ? <Crown className="size-3" /> : <UserCog className="size-3" />}
+          {DEMO_ROLE_LABEL[role]}
         </Badge>
       )}
 
@@ -78,10 +97,35 @@ export function Topbar({ user, demo }: { user: TopbarUser | null; demo: boolean 
             <DropdownMenuLabel className="font-normal">
               <p className="text-sm font-medium">{user?.name ?? "Invitado"}</p>
               {user?.email && <p className="text-xs text-muted-foreground">{user.email}</p>}
+              {role && (
+                <p className="mt-0.5 text-xs text-primary">
+                  {DEMO_ROLE_SHORT[role]} · {DEMO_ROLE_LABEL[role]}
+                </p>
+              )}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            {demo && (
+              <>
+                {role === "operator" ? (
+<DropdownMenuItem
+                  onClick={() => setDemoRole("owner")}
+                >
+                  <Crown className="size-4" />
+                  Ver como Admin Dueño
+                </DropdownMenuItem>
+                ) : (
+<DropdownMenuItem
+                  onClick={() => setDemoRole("operator")}
+                >
+                  <UserCog className="size-4" />
+                  Ver como Admin Operador
+                </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+              </>
+            )}
             <DropdownMenuItem asChild disabled>
-              <span className="cursor-not-allowed opacity-60">Mi perfil (Fase 8)</span>
+              <span className="cursor-not-allowed opacity-60">Mi perfil (Fase 13)</span>
             </DropdownMenuItem>
             {!demo && (
               <>

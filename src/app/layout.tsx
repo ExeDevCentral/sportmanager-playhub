@@ -21,11 +21,11 @@ const oswald = Oswald({
 
 export const metadata: Metadata = {
   title: {
-    default: "SportManager/PlayHub · Gestión de complejos de pádel",
+    default: "SportManager/PlayHub · Gestión de centros deportivos",
     template: "%s · SportManager/PlayHub",
   },
   description:
-    "Reservas online, pagos, calendario multi-cancha, CRM, históricos de Excel y analítica para complejos de pádel.",
+    "Reservas online, pagos, calendario multi-espacio, CRM, históricos de Excel y analítica para tu centro deportivo: pádel, tenis, fútbol, rugby, natación, kayak y más.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
