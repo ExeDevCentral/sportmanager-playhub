@@ -271,6 +271,7 @@ function AnimatedCounter({ value, suffix = "", prefix = "", className }: { value
   const ref = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => {
+      if (!entry) return;
       if (!entry.isIntersecting) return;
       const duration = 1400;
       const start = performance.now();
@@ -297,7 +298,7 @@ function useReveal() {
     const el = ref.current;
     if (!el) return;
     const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) setTriggered(true);
+      if (entry?.isIntersecting) setTriggered(true);
     }, { threshold: 0.08, rootMargin: "0px 0px 60px 0px" });
     observer.observe(el);
     return () => observer.disconnect();
