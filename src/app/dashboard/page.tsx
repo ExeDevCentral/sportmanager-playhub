@@ -61,7 +61,7 @@ export default async function DashboardPage() {
           ["Cancha más rentable", bestCourt?.court ?? "—", bestCourt ? formatCurrency(bestCourt.revenue) : "Sin datos"],
           ["Ocupación general", `${averageOccupancy}%`, "promedio de canchas"],
         ].map(([label, value, caption]) => (
-          <Card key={label} className="border-primary/20 bg-primary/[0.04]">
+          <Card key={label} className="dashboard-summary-card">
             <CardContent className="p-4">
               <p className="text-xs font-medium text-muted-foreground">{label}</p>
               <p className="mt-1 text-xl font-semibold tracking-tight">{value}</p>

@@ -43,7 +43,7 @@ export function OccupancyChart({ data }: { data: CourtStat[] }) {
         <ChartTooltip content={<ChartTooltipContent hideLabel />} />
         <Bar dataKey="occupancy" radius={[0, 4, 4, 0]}>
           {chartData.map((court) => (
-            <Cell key={court.court} fill={court.court === lowest?.court ? "var(--color-muted-foreground)" : "var(--color-occupancy)"} />
+            <Cell key={court.court} fill={court.court === lowest?.court ? "var(--dashboard-attention)" : "var(--color-occupancy)"} />
           ))}
           <LabelList
             dataKey="occupancy"

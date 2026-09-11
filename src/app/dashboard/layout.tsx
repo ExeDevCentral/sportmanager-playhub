@@ -6,6 +6,7 @@ import { DEMO_ACCOUNT, DEMO_OPERATOR_ACCOUNT, DEMO_PLATFORM_ACCOUNT, DEMO_SESSIO
 import { getActiveRole } from "@/lib/auth/role";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { Topbar, type TopbarUser } from "@/components/dashboard/topbar";
+import { DashboardThemeProvider } from "@/components/dashboard/dashboard-theme";
 
 export const dynamic = "force-dynamic";
 
@@ -53,18 +54,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   return (
-    <div className="dashboard-shell relative min-h-svh bg-background text-foreground">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(62%_38%_at_88%_-2%,rgba(201,243,106,0.18),transparent_62%),linear-gradient(rgba(201,243,106,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(201,243,106,0.06)_1px,transparent_1px)] bg-[size:auto,46px_46px,46px_46px]"
-      />
-      <div className="relative z-10 flex min-h-svh">
-        <Sidebar role={role} className="sticky top-0 z-30 hidden h-svh lg:flex lg:flex-col" />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <Topbar user={user} demo={demo} role={role} />
-          <main className="flex-1 px-4 py-6 lg:px-6">{children}</main>
+    <DashboardThemeProvider>
+      <div className="dashboard-shell relative min-h-svh bg-background text-foreground">
+        <div aria-hidden className="dashboard-backdrop pointer-events-none absolute inset-0" />
+        <div className="relative z-10 flex min-h-svh">
+          <Sidebar role={role} className="sticky top-0 z-30 hidden h-svh lg:flex lg:flex-col" />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <Topbar user={user} demo={demo} role={role} />
+            <main className="flex-1 px-4 py-6 lg:px-6">{children}</main>
+          </div>
         </div>
       </div>
-    </div>
+    </DashboardThemeProvider>
   );
 }

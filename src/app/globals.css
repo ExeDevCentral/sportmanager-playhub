@@ -118,37 +118,85 @@
 }
 
 .dashboard-shell {
-  --background: #0d1713;
-  --foreground: #eef7e8;
-  --card: #16231c;
-  --card-foreground: #eef7e8;
-  --popover: #16231c;
-  --popover-foreground: #eef7e8;
-  --primary: #c9f36a;
-  --primary-foreground: #0a1f12;
-  --secondary: #203128;
-  --secondary-foreground: #d9f99d;
-  --muted: #1b2b22;
-  --muted-foreground: #9aaa9e;
-  --accent: #23382a;
-  --accent-foreground: #dfff85;
-  --destructive: #f87171;
-  --border: #2d4435;
-  --input: #294032;
-  --ring: #c9f36a;
-  --chart-1: #c9f36a;
-  --chart-2: #8fca52;
-  --chart-3: #5fa45c;
-  --chart-4: #7bc9d9;
-  --chart-5: #dfff85;
-  --sidebar: #0d1713;
-  --sidebar-foreground: #eef7e8;
-  --sidebar-primary: #c9f36a;
-  --sidebar-primary-foreground: #0a1f12;
-  --sidebar-accent: #203128;
-  --sidebar-accent-foreground: #dfff85;
-  --sidebar-border: #294032;
-  --sidebar-ring: #c9f36a;
+  --background: #0d1f17;
+  --foreground: #e8e6dc;
+  --card: #14291f;
+  --card-foreground: #e8e6dc;
+  --popover: #14291f;
+  --popover-foreground: #e8e6dc;
+  --primary: #8dc63f;
+  --primary-foreground: #0d1f17;
+  --secondary: #23372a;
+  --secondary-foreground: #d9e4cd;
+  --muted: #1d3025;
+  --muted-foreground: #a9b4a8;
+  --accent: #294032;
+  --accent-foreground: #e8e6dc;
+  --destructive: #c47d4e;
+  --border: #3a4a3e;
+  --input: #304538;
+  --ring: #8dc63f;
+  --chart-1: #d4af37;
+  --chart-2: #8dc63f;
+  --chart-3: #7fb84f;
+  --chart-4: #c47d4e;
+  --chart-5: #e8e6dc;
+  --dashboard-positive: #d4af37;
+  --dashboard-attention: #c47d4e;
+  --dashboard-grid: #3a4a3e;
+  --dashboard-glow: rgba(141, 198, 63, 0.14);
+  --sidebar: #0d1f17;
+  --sidebar-foreground: #e8e6dc;
+  --sidebar-primary: #8dc63f;
+  --sidebar-primary-foreground: #0d1f17;
+  --sidebar-accent: #23372a;
+  --sidebar-accent-foreground: #e8e6dc;
+  --sidebar-border: #3a4a3e;
+  --sidebar-ring: #8dc63f;
+}
+
+.dashboard-theme-root[data-dashboard-theme="artistic"] .dashboard-shell {
+  --foreground: #f5f1e8;
+  --card-foreground: #f5f1e8;
+  --popover-foreground: #f5f1e8;
+  --primary: #8dc63f;
+  --primary-foreground: #0d1f17;
+  --secondary-foreground: #d7f8ef;
+  --muted-foreground: #adc4bd;
+  --accent: #24423c;
+  --accent-foreground: #f5f1e8;
+  --border: #31534b;
+  --input: #31534b;
+  --ring: #ff5c8a;
+  --chart-1: #ff5c8a;
+  --chart-2: #5eead4;
+  --chart-3: #8dc63f;
+  --chart-4: #ffd23f;
+  --chart-5: #f5f1e8;
+  --dashboard-positive: #ff5c8a;
+  --dashboard-attention: #ffd23f;
+  --dashboard-grid: #31534b;
+  --dashboard-glow: rgba(255, 92, 138, 0.16);
+  --sidebar-foreground: #f5f1e8;
+  --sidebar-primary: #8dc63f;
+  --sidebar-primary-foreground: #0d1f17;
+  --sidebar-accent: #24423c;
+  --sidebar-accent-foreground: #f5f1e8;
+  --sidebar-border: #31534b;
+  --sidebar-ring: #ff5c8a;
+}
+
+.dashboard-backdrop {
+  background-image:
+    radial-gradient(62% 38% at 88% -2%, var(--dashboard-glow), transparent 62%),
+    linear-gradient(color-mix(in srgb, var(--dashboard-grid) 42%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--dashboard-grid) 42%, transparent) 1px, transparent 1px);
+  background-size: auto, 46px 46px, 46px 46px;
+}
+
+.dashboard-summary-card {
+  border-color: color-mix(in srgb, var(--dashboard-positive) 32%, transparent);
+  background-color: color-mix(in srgb, var(--dashboard-positive) 5%, transparent);
 }
 
 @layer base {

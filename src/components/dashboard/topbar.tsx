@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Crown, Globe2, LogOut, Menu, FlaskConical, UserCog } from "lucide-react";
+import { Check, Crown, Globe2, LogOut, Menu, FlaskConical, Palette, UserCog } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { signOut, setDemoRole } from "@/lib/auth/actions";
 import { DEMO_ROLE_LABEL, DEMO_ROLE_SHORT, type DemoRole } from "@/lib/auth/demo-account";
 import { SidebarContent } from "./sidebar";
+import { useDashboardTheme } from "./dashboard-theme";
 
 export type TopbarUser = {
   name: string;
@@ -34,6 +35,7 @@ export function Topbar({
   role?: DemoRole;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { theme, setTheme } = useDashboardTheme();
   const initials = (user?.name ?? "DE")
     .split(" ")
     .map((p) => p[0])
@@ -89,6 +91,27 @@ export function Topbar({
       <span className="hidden text-sm capitalize text-muted-foreground md:block">{today}</span>
 
       <div className="ml-auto flex items-center gap-2">
+        <div className="flex items-center gap-1 rounded-lg border border-input bg-card/70 p-1">
+          <Palette className="mx-1 size-3.5 text-muted-foreground" aria-hidden />
+          {([
+            ["formal", "Formal"],
+            ["artistic", "Rosa gol"],
+          ] as const).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={theme === value}
+              onClick={() => setTheme(value)}
+              aria-label={`Usar tema ${label}`}
+              className={`rounded-md px-2 py-1 text-xs transition-colors ${
+                theme === value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"
+              }`}
+            >
+              {theme === value && <Check className="mr-1 inline size-3" />}
+              <span className="hidden md:inline">{label}</span>
+            </button>
+          ))}
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 rounded-full outline-none ring-ring focus-visible:ring-2">

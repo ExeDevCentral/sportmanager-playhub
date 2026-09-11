@@ -284,6 +284,32 @@ npm run deploy:preview    # vercel deploy
 | 12 · Reservas (listado), Reportes, Analytics, Históricos | ✅ |
 | 13 · Dark/cyber, multi-deporte, accesos y pulido | 🚧 siguiente |
 
+### Auditoría de datos y próximos pasos
+
+La auditoría estática de `supabase/migrations/0001-0010` confirma que el proyecto ya
+incluye las tablas principales, triggers de `updated_at` y reglas de negocio, funciones
+para reservas, slots, precios, pagos y KPIs, vistas de reportes, RLS y configuración de
+Realtime. El esquema de tipos en `src/types/database.ts` está mantenido como espejo de
+esas migraciones.
+
+El modo Demo continúa siendo el camino operativo recomendado: usa datos deterministas,
+no requiere credenciales ni altera Supabase. La auditoría SQL local queda pendiente de
+ejecutarse con una instancia PostgreSQL/Supabase levantada (`supabase db lint --local`).
+
+Backlog cercano para activar el modo real de forma segura:
+
+1. Levantar un entorno Supabase de staging y ejecutar las migraciones en orden, seguido
+   por `supabase db lint` y `supabase test db`.
+2. Regenerar `src/types/database.ts` contra el proyecto desplegado y revisar diferencias.
+3. Conectar primero `services/dashboard.ts` con `fn_complex_kpis`, `fn_occupancy_by_court`
+   y `fn_compare_periods`, manteniendo fallback Demo.
+4. Conectar calendario y reservas con `fn_available_slots`, `fn_create_reservation` y
+   `fn_cancel_reservation`; validar doble reserva, horarios y expiración de holds.
+5. Conectar pagos y notificaciones, verificando webhook idempotente, auditoría y RLS.
+6. Completar clientes, históricos, importaciones, configuración y vista plataforma.
+7. Ejecutar pruebas E2E con un complejo de staging antes de habilitar credenciales en
+   producción.
+
 ## 11. Scripts útiles
 
 ```bash
