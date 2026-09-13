@@ -1,31 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { Banknote, Loader2, Plus } from "lucide-react";
+import { Banknote, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { getSettingsData, type RateView } from "@/services/settings";
+import type { RateView } from "@/services/settings";
+import type { SettingsData } from "@/services/settings";
 import { formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
 
-export function RatesClient() {
-  const [rates, setRates] = React.useState<RateView[]>([]);
-  const [loading, setLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    let cancelled = false;
-    getSettingsData()
-      .then((d) => {
-        if (!cancelled) setRates(d.rates);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, []);
+export function RatesClient({ data }: { data: SettingsData }) {
+  const [rates, setRates] = React.useState<RateView[]>(data.rates);
 
   const updatePrice = (id: string, price: number) => {
     setRates((prev) => prev.map((r) => (r.id === id ? { ...r, price } : r)));
@@ -63,12 +51,7 @@ export function RatesClient() {
         </Button>
       </div>
 
-      {loading ? (
-        <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">
-          <Loader2 className="mr-2 size-4 animate-spin" /> Cargando tarifas…
-        </div>
-      ) : (
-        <Card>
+      <Card>
           <CardHeader>
             <CardTitle className="text-base">Tarifas activas</CardTitle>
             <CardDescription>El precio final se resuelve con la regla de mayor prioridad (fn_resolve_price).</CardDescription>
@@ -117,7 +100,6 @@ export function RatesClient() {
             </Button>
           </CardFooter>
         </Card>
-      )}
     </div>
   );
 }

@@ -20,12 +20,7 @@ import {
 } from "@/components/ui/table";
 import { formatDate } from "@/lib/format";
 import { sendTestEmail } from "@/lib/notifications/actions";
-import {
-  getNotificationData,
-  type NotificationTemplate,
-  type NotificationRecord,
-  type NotificationSettings,
-} from "@/services/notifications";
+import type { NotificationTemplate, NotificationRecord, NotificationSettings } from "@/services/notifications";
 import type { NotificationStatus } from "@/types/database";
 import {
   AlertDialog,
@@ -37,6 +32,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+type NotificationData = {
+  templates: NotificationTemplate[];
+  records: NotificationRecord[];
+  settings: NotificationSettings;
+};
 
 type EmailSetup = {
   configured: boolean;
@@ -73,12 +74,13 @@ const STATUS_LABEL: Record<NotificationStatus, string> = {
   skipped: "Omitido",
 };
 
-export function NotificationsClient({ emailSetup }: { emailSetup: EmailSetup }) {
-  const [templates, setTemplates] = React.useState<NotificationTemplate[]>([]);
-  const [records, setRecords] = React.useState<NotificationRecord[]>([]);
-  const [settings, setSettings] = React.useState<NotificationSettings | null>(null);
-  const [loading, setLoading] = React.useState(true);
-  const [selectedTemplateKey, setSelectedTemplateKey] = React.useState("");
+export function NotificationsClient({ emailSetup, data }: { emailSetup: EmailSetup; data: NotificationData }) {
+  const [templates] = React.useState<NotificationTemplate[]>(data.templates);
+  const [records] = React.useState<NotificationRecord[]>(data.records);
+  const [settings, setSettings] = React.useState<NotificationSettings | null>(data.settings);
+  const [selectedTemplateKey, setSelectedTemplateKey] = React.useState(
+    data.templates.find((template) => template.channel === "email" && template.is_active)?.key ?? "",
+  );
   const [confirmSendOpen, setConfirmSendOpen] = React.useState(false);
   const testFormRef = React.useRef<HTMLFormElement>(null);
   const [testState, testAction, testPending] = useActionState(sendTestEmail, null);
@@ -90,24 +92,6 @@ export function NotificationsClient({ emailSetup }: { emailSetup: EmailSetup }) 
       toast.error("El email de prueba no se pudo enviar", { description: testState.error });
     }
   }, [testState]);
-
-  React.useEffect(() => {
-    let cancelled = false;
-    getNotificationData()
-      .then((data) => {
-        if (cancelled) return;
-        setTemplates(data.templates);
-        setSelectedTemplateKey(
-          data.templates.find((template) => template.channel === "email" && template.is_active)?.key ?? "",
-        );
-        setRecords(data.records);
-        setSettings(data.settings);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, []);
 
   const toggleSetting = (key: keyof NotificationSettings) => {
     setSettings((prev) => (prev ? { ...prev, [key]: !prev[key] } : prev));
@@ -189,11 +173,6 @@ export function NotificationsClient({ emailSetup }: { emailSetup: EmailSetup }) 
               </p>
             </CardContent>
           </Card>
-          {loading ? (
-            <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">
-              <Loader2 className="mr-2 size-4 animate-spin" /> Cargando plantillas…
-            </div>
-          ) : (
             <div className="grid gap-4 md:grid-cols-2">
               {templates.map((t) => (
                 <Card key={t.id}>
@@ -226,18 +205,12 @@ export function NotificationsClient({ emailSetup }: { emailSetup: EmailSetup }) 
                 </Card>
               ))}
             </div>
-          )}
         </TabsContent>
 
         {/* ── Registro ── */}
         <TabsContent value="activity" className="mt-4">
           <Card>
             <CardContent className="p-0">
-              {loading ? (
-                <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">
-                  <Loader2 className="mr-2 size-4 animate-spin" /> Cargando envíos…
-                </div>
-              ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -275,7 +248,6 @@ export function NotificationsClient({ emailSetup }: { emailSetup: EmailSetup }) 
                     ))}
                   </TableBody>
                 </Table>
-              )}
             </CardContent>
           </Card>
         </TabsContent>

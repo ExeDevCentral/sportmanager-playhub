@@ -121,8 +121,9 @@ export async function getSettingsData(): Promise<SettingsData> {
   if (isDemoMode()) {
     return getDemoData();
   }
-  // TODO(Fase 4 real): query complexes, courts, operating_hours, rate_rules, promotions, complex_settings
-  throw new Error("Supabase no implementado aún (Fase 4).");
+  // La implementación real vive en settings-real.ts (server-only) para no
+  // arrastrar cookies()/RLS al bundle de los client components.
+  return (await import("@/services/settings-real")).getSettingsDataReal();
 }
 
 export { DAY_NAMES };

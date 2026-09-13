@@ -1,5 +1,6 @@
 import { isDemoMode } from "@/lib/demo";
 import { getSettingsData } from "@/services/settings";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { RateView, PromotionView } from "@/services/settings";
 
 export type { RateView, PromotionView };
@@ -172,6 +173,11 @@ export async function buildSpaceSlots(dateKey: string): Promise<SpaceSlots[]> {
   }));
 }
 
+/** Strip "HH:MM:SS" → "HH:MM". */
+function fmtTime(t: string): string {
+  return t.length > 5 ? t.slice(0, 5) : t;
+}
+
 export async function getPublicBookingData(dateKey: string): Promise<PublicBookingData> {
   if (isDemoMode()) {
     const settings = await getSettingsData();
@@ -185,7 +191,102 @@ export async function getPublicBookingData(dateKey: string): Promise<PublicBooki
       requireOnlinePayment: settings.settings.require_online_payment,
     };
   }
-  // TODO(Fase 11 real): vista pública anónima (courts public + promotions public +
-  // complex_settings) con política RLS `to anon`.
-  throw new Error("Supabase no implementado aún (página pública).");
+
+  const admin = createAdminClient();
+
+  const { data: complex, error: cxErr } = await admin
+    .from("complexes")
+    .select("id,name")
+    .eq("public_site_enabled", true)
+    .eq("status", "active")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (cxErr) throw new Error(cxErr.message);
+  if (!complex) throw new Error("No hay complejos públicos configurados.");
+
+  const cid = complex.id;
+
+  const [courtsRes, ratesRes, promosRes, settingsRes] = await Promise.all([
+    admin
+      .from("courts")
+      .select("id,name,surface,is_indoor,has_lighting,description")
+      .eq("complex_id", cid)
+      .eq("is_public", true)
+      .eq("status", "active")
+      .order("position", { ascending: true }),
+    admin
+      .from("rate_rules")
+      .select("id,court_id,name,day_of_week,starts_from,ends_to,price,is_active")
+      .eq("complex_id", cid)
+      .eq("is_active", true),
+    admin
+      .from("promotions")
+      .select("id,name,description,discount_type,discount_value,applies_days,valid_from,valid_to,max_uses,used_count,is_active,is_public")
+      .eq("complex_id", cid)
+      .eq("is_active", true)
+      .eq("is_public", true),
+    admin
+      .from("complex_settings")
+      .select("slot_duration_minutes,max_advance_days,min_advance_minutes,require_online_payment")
+      .eq("complex_id", cid)
+      .maybeSingle(),
+  ]);
+
+  if (courtsRes.error) throw new Error(courtsRes.error.message);
+  if (ratesRes.error) throw new Error(ratesRes.error.message);
+  if (promosRes.error) throw new Error(promosRes.error.message);
+  if (settingsRes.error) throw new Error(settingsRes.error.message);
+
+  const cs = settingsRes.data;
+  const slotDuration = cs?.slot_duration_minutes ?? 60;
+  const maxAdvanceDays = cs?.max_advance_days ?? 30;
+  const minAdvanceMinutes = cs?.min_advance_minutes ?? 60;
+  const requireOnlinePayment = cs?.require_online_payment ?? true;
+
+  const rates: RateView[] = (ratesRes.data ?? []).map((r) => ({
+    id: r.id,
+    court_id: r.court_id,
+    name: r.name,
+    day_of_week: r.day_of_week,
+    starts_from: r.starts_from ? fmtTime(r.starts_from) : null,
+    ends_to: r.ends_to ? fmtTime(r.ends_to) : null,
+    price: Number(r.price),
+    is_active: r.is_active,
+  }));
+
+  const promotions: PromotionView[] = (promosRes.data ?? []).map((p) => ({
+    id: p.id,
+    name: p.name,
+    description: p.description,
+    discount_type: p.discount_type as PromotionView["discount_type"],
+    discount_value: p.discount_value != null ? Number(p.discount_value) : null,
+    applies_days: p.applies_days as number[] | null,
+    valid_from: p.valid_from,
+    valid_to: p.valid_to,
+    max_uses: p.max_uses,
+    used_count: p.used_count,
+    is_active: p.is_active,
+    is_public: p.is_public,
+  }));
+
+  const spaces: SpaceSlots[] = (courtsRes.data ?? []).map((c) => ({
+    id: c.id,
+    name: c.name,
+    surface: c.surface,
+    is_indoor: c.is_indoor,
+    has_lighting: c.has_lighting,
+    description: c.description,
+    slots: computeSpaceSlots(c.id, dateKey, rates, promotions, slotDuration, requireOnlinePayment),
+  }));
+
+  return {
+    complexName: complex.name,
+    slots: spaces,
+    promotions,
+    slotDuration,
+    maxAdvanceDays,
+    minAdvanceMinutes,
+    requireOnlinePayment,
+  };
 }

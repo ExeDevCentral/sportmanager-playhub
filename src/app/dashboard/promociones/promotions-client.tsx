@@ -1,12 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { Percent, Loader2, Plus, CalendarDays } from "lucide-react";
+import { Percent, Plus, CalendarDays } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { getSettingsData, DAY_NAMES, type PromotionView } from "@/services/settings";
+import type { PromotionView } from "@/services/settings";
+import type { SettingsData } from "@/services/settings";
 import { formatNumber } from "@/lib/format";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+const DAY_NAMES = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+
 const TYPE_LABEL: Record<PromotionView["discount_type"], string> = {
   percent: "Porcentaje",
   fixed: "Monto fijo",
@@ -34,9 +37,8 @@ const TYPE_LABEL: Record<PromotionView["discount_type"], string> = {
   free_hours: "Horas gratis",
 };
 
-export function PromotionsClient() {
-  const [promotions, setPromotions] = React.useState<PromotionView[]>([]);
-  const [loading, setLoading] = React.useState(true);
+export function PromotionsClient({ data }: { data: SettingsData }) {
+  const [promotions, setPromotions] = React.useState<PromotionView[]>(data.promotions);
   const [createOpen, setCreateOpen] = React.useState(false);
   const [form, setForm] = React.useState({
     name: "",
@@ -50,29 +52,17 @@ export function PromotionsClient() {
   });
 
   React.useEffect(() => {
-    let cancelled = false;
-    getSettingsData()
-      .then((d) => {
-        if (!cancelled) {
-          const saved = window.localStorage.getItem("sportmanager-demo-promotions");
-          if (saved) {
-            try {
-              const parsed = JSON.parse(saved) as PromotionView[];
-              if (Array.isArray(parsed)) {
-                setPromotions(parsed);
-                return;
-              }
-            } catch {
-              window.localStorage.removeItem("sportmanager-demo-promotions");
-            }
-          }
-          setPromotions(d.promotions);
+    const saved = window.localStorage.getItem("sportmanager-demo-promotions");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as PromotionView[];
+        if (Array.isArray(parsed)) {
+          setPromotions(parsed);
         }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => { cancelled = true; };
+      } catch {
+        window.localStorage.removeItem("sportmanager-demo-promotions");
+      }
+    }
   }, []);
 
   const toggleActive = (id: string) => {
@@ -98,12 +88,7 @@ export function PromotionsClient() {
         </Button>
       </div>
 
-      {loading ? (
-        <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">
-          <Loader2 className="mr-2 size-4 animate-spin" /> Cargando promociones…
-        </div>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
           {promotions.map((p) => (
             <Card key={p.id}>
               <CardHeader className="pb-2">
@@ -145,7 +130,6 @@ export function PromotionsClient() {
             </Card>
           ))}
         </div>
-      )}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>

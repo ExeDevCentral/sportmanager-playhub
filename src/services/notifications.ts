@@ -158,6 +158,7 @@ export async function getNotificationData(): Promise<{
       settings: getDemoSettings(),
     };
   }
-  // TODO(Fase 7 real): notification_templates + notifications + complex_settings
-  throw new Error("Supabase no implementado aún (Fase 7).");
+  // La implementación real vive en notifications-real.ts (server-only) para no
+  // arrastrar cookies()/RLS al bundle de los client components.
+  return (await import("@/services/notifications-real")).getNotificationDataReal();
 }

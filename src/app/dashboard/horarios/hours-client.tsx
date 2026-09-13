@@ -1,29 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { Clock, Loader2 } from "lucide-react";
+import { Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { getSettingsData, DAY_NAMES, type OperatingHourView } from "@/services/settings";
+import type { OperatingHourView } from "@/services/settings";
+import type { SettingsData } from "@/services/settings";
 import { toast } from "sonner";
 
-export function HoursClient() {
-  const [hours, setHours] = React.useState<OperatingHourView[]>([]);
-  const [loading, setLoading] = React.useState(true);
+const DAY_NAMES = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
-  React.useEffect(() => {
-    let cancelled = false;
-    getSettingsData()
-      .then((d) => {
-        if (!cancelled) setHours(d.operatingHours);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, []);
+export function HoursClient({ data }: { data: SettingsData }) {
+  const [hours, setHours] = React.useState<OperatingHourView[]>(data.operatingHours);
 
   const update = (dow: number, patch: Partial<OperatingHourView>) => {
     setHours((prev) => prev.map((h) => (h.day_of_week === dow ? { ...h, ...patch } : h)));
@@ -39,12 +29,7 @@ export function HoursClient() {
         </div>
       </div>
 
-      {loading ? (
-        <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">
-          <Loader2 className="mr-2 size-4 animate-spin" /> Cargando horarios…
-        </div>
-      ) : (
-        <Card>
+      <Card>
           <CardHeader>
             <CardTitle className="text-base">Semana</CardTitle>
             <CardDescription>Domingo a sábado · formato 24 h</CardDescription>
@@ -85,7 +70,6 @@ export function HoursClient() {
             </Button>
           </CardFooter>
         </Card>
-      )}
     </div>
   );
 }

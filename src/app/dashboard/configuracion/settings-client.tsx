@@ -1,36 +1,21 @@
 "use client";
 
 import * as React from "react";
-import { Settings as SettingsIcon, Loader2, Save } from "lucide-react";
+import { Settings as SettingsIcon, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { getSettingsData, type CourtView } from "@/services/settings";
+import type { CourtView } from "@/services/settings";
+import type { SettingsData } from "@/services/settings";
 import type { ComplexSettings } from "@/types/database";
 
-export function SettingsClient() {
-  const [settings, setSettings] = React.useState<ComplexSettings | null>(null);
-  const [complexName, setComplexName] = React.useState("");
-  const [courts, setCourts] = React.useState<CourtView[]>([]);
-  const [loading, setLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    let cancelled = false;
-    getSettingsData()
-      .then((d) => {
-        if (cancelled) return;
-        setSettings(d.settings);
-        setComplexName(d.complexName);
-        setCourts(d.courts);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, []);
+export function SettingsClient({ data }: { data: SettingsData }) {
+  const [settings, setSettings] = React.useState<ComplexSettings>(data.settings);
+  const [complexName, setComplexName] = React.useState(data.complexName);
+  const [courts] = React.useState<CourtView[]>(data.courts);
 
   const patch = (key: keyof ComplexSettings, value: unknown) => {
     setSettings((s) => (s ? { ...s, [key]: value } : s));
@@ -39,14 +24,6 @@ export function SettingsClient() {
   const save = () => {
     toast.success("Configuración guardada", { description: "Modo demo: los cambios no persisten aún." });
   };
-
-  if (loading || !settings) {
-    return (
-      <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-        <Loader2 className="mr-2 size-4 animate-spin" /> Cargando configuración…
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-3xl space-y-6">

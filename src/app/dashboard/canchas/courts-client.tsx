@@ -1,11 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { Volleyball, Loader2, Plus, Sun, Moon, AlertTriangle } from "lucide-react";
+import { Volleyball, Plus, Sun, Moon, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getSettingsData, type CourtView } from "@/services/settings";
+import type { CourtView } from "@/services/settings";
+import type { SettingsData } from "@/services/settings";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -31,35 +32,22 @@ const SURFACE_STYLE: Record<string, string> = {
   Vidrio: "bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300",
 };
 
-export function CourtsClient() {
-  const [courts, setCourts] = React.useState<CourtView[]>([]);
-  const [loading, setLoading] = React.useState(true);
+export function CourtsClient({ data }: { data: SettingsData }) {
+  const [courts, setCourts] = React.useState<CourtView[]>(data.courts);
   const [pendingStatus, setPendingStatus] = React.useState<{ id: string; status: CourtView["status"] } | null>(null);
 
   React.useEffect(() => {
-    let cancelled = false;
-    getSettingsData()
-      .then((d) => {
-        if (!cancelled) {
-          const saved = window.localStorage.getItem("sportmanager-demo-courts");
-          if (saved) {
-            try {
-              const parsed = JSON.parse(saved) as CourtView[];
-              if (Array.isArray(parsed)) {
-                setCourts(parsed);
-                return;
-              }
-            } catch {
-              window.localStorage.removeItem("sportmanager-demo-courts");
-            }
-          }
-          setCourts(d.courts);
+    const saved = window.localStorage.getItem("sportmanager-demo-courts");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as CourtView[];
+        if (Array.isArray(parsed)) {
+          setCourts(parsed);
         }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => { cancelled = true; };
+      } catch {
+        window.localStorage.removeItem("sportmanager-demo-courts");
+      }
+    }
   }, []);
 
   const requestStatusChange = (court: CourtView) => {
@@ -84,14 +72,6 @@ export function CourtsClient() {
     setPendingStatus(null);
   };
 
-  if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-        <Loader2 className="mr-2 size-4 animate-spin" /> Cargando canchas…
-      </div>
-    );
-  }
-
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
@@ -105,20 +85,24 @@ export function CourtsClient() {
         <Button
           size="sm"
           onClick={() => {
-            setCourts((prev) => [
-              ...prev,
-              {
-                id: `local-court-${Date.now()}`,
-                name: `Cancha ${prev.length + 1}`,
-                description: "Cancha creada en modo demo.",
-                surface: "Techada",
-                is_indoor: true,
-                has_lighting: true,
-                status: "active",
-                is_public: false,
-                position: prev.length + 1,
-              },
-            ]);
+            setCourts((prev) => {
+              const next = [
+                ...prev,
+                {
+                  id: `local-court-${Date.now()}`,
+                  name: `Cancha ${prev.length + 1}`,
+                  description: "Cancha creada en modo demo.",
+                  surface: "Techada",
+                  is_indoor: true,
+                  has_lighting: true,
+                  status: "active",
+                  is_public: false,
+                  position: prev.length + 1,
+                },
+              ];
+              window.localStorage.setItem("sportmanager-demo-courts", JSON.stringify(next));
+              return next;
+            });
             toast.success("Cancha agregada", { description: "La nueva cancha queda disponible en esta sesión demo." });
           }}
         >
