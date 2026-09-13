@@ -1,6 +1,4 @@
 import { isDemoMode } from "@/lib/demo";
-import { getComplexScope } from "@/services/db";
-import { createClient } from "@/lib/supabase/server";
 import { mulberry32 } from "@/lib/random";
 import type { ReservationStatus } from "@/types/database";
 
@@ -68,36 +66,9 @@ export async function getReservationHistory(): Promise<HistoryRecord[]> {
   if (isDemoMode()) {
     return getDemoHistory();
   }
-
-  const scope = await getComplexScope();
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("v_reservations_detail")
-    .select("id,customer_name,court_name,starts_at,price,paid_amount,status,channel,kind")
-    .eq("complex_id", scope.complexId)
-    .order("starts_at", { ascending: false })
-    .limit(200);
-  if (error) throw new Error(error.message);
-
-  return (data ?? []).map((r) => ({
-    id: r.id,
-    customer_name: r.customer_name ?? "Sin nombre",
-    court_name: r.court_name,
-    starts_at: r.starts_at,
-    price: Number(r.price),
-    paid_amount: Number(r.paid_amount),
-    status: r.status as ReservationStatus,
-    channel: (r.channel === "import" ? "import" : r.channel === "admin" ? "manual" : "online") as HistoryRecord["channel"],
-    is_booked: r.status !== "cancelled" && r.status !== "no_show",
-  }));
+  // La implementación real vive en history-real.ts (server-only) para no
+  // arrastrar cookies()/RLS al bundle de los client components.
+  return (await import("@/services/history-real")).getReservationHistoryReal();
 }
 
-export const HISTORY_STATUS_LABEL: Partial<Record<ReservationStatus, string>> = {
-  pending: "Pendiente",
-  confirmed: "Confirmada",
-  cancelled: "Cancelada",
-  completed: "Completada",
-  no_show: "No asistió",
-  expired: "Expirada",
-  refunded: "Reembolsada",
-};
+export { HISTORY_STATUS_LABEL } from "@/services/labels";

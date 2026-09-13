@@ -33,22 +33,20 @@ const SURFACE_STYLE: Record<string, string> = {
 };
 
 export function CourtsClient({ data }: { data: SettingsData }) {
-  const [courts, setCourts] = React.useState<CourtView[]>(data.courts);
-  const [pendingStatus, setPendingStatus] = React.useState<{ id: string; status: CourtView["status"] } | null>(null);
-
-  React.useEffect(() => {
+  const [courts, setCourts] = React.useState<CourtView[]>(() => {
+    if (typeof window === "undefined") return data.courts;
     const saved = window.localStorage.getItem("sportmanager-demo-courts");
     if (saved) {
       try {
         const parsed = JSON.parse(saved) as CourtView[];
-        if (Array.isArray(parsed)) {
-          setCourts(parsed);
-        }
+        if (Array.isArray(parsed)) return parsed;
       } catch {
         window.localStorage.removeItem("sportmanager-demo-courts");
       }
     }
-  }, []);
+    return data.courts;
+  });
+  const [pendingStatus, setPendingStatus] = React.useState<{ id: string; status: CourtView["status"] } | null>(null);
 
   const requestStatusChange = (court: CourtView) => {
     const next: CourtView["status"] =
@@ -95,7 +93,7 @@ export function CourtsClient({ data }: { data: SettingsData }) {
                   surface: "Techada",
                   is_indoor: true,
                   has_lighting: true,
-                  status: "active",
+                  status: "active" as const,
                   is_public: false,
                   position: prev.length + 1,
                 },

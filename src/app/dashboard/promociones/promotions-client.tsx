@@ -38,7 +38,19 @@ const TYPE_LABEL: Record<PromotionView["discount_type"], string> = {
 };
 
 export function PromotionsClient({ data }: { data: SettingsData }) {
-  const [promotions, setPromotions] = React.useState<PromotionView[]>(data.promotions);
+  const [promotions, setPromotions] = React.useState<PromotionView[]>(() => {
+    if (typeof window === "undefined") return data.promotions;
+    const saved = window.localStorage.getItem("sportmanager-demo-promotions");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as PromotionView[];
+        if (Array.isArray(parsed)) return parsed;
+      } catch {
+        window.localStorage.removeItem("sportmanager-demo-promotions");
+      }
+    }
+    return data.promotions;
+  });
   const [createOpen, setCreateOpen] = React.useState(false);
   const [form, setForm] = React.useState({
     name: "",
@@ -50,20 +62,6 @@ export function PromotionsClient({ data }: { data: SettingsData }) {
     max_uses: "",
     applies_days: [] as number[],
   });
-
-  React.useEffect(() => {
-    const saved = window.localStorage.getItem("sportmanager-demo-promotions");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved) as PromotionView[];
-        if (Array.isArray(parsed)) {
-          setPromotions(parsed);
-        }
-      } catch {
-        window.localStorage.removeItem("sportmanager-demo-promotions");
-      }
-    }
-  }, []);
 
   const toggleActive = (id: string) => {
     setPromotions((prev) => {

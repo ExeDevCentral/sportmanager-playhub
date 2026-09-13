@@ -7,13 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { WeekGrid } from "@/components/calendar/week-grid";
 import { ReservationDialog } from "@/components/calendar/reservation-dialog";
-import {
-  getCalendarEvents,
-  getCustomers,
-  createReservation,
-  cancelReservation,
-  isDemoModeError,
-} from "@/services/calendar";
+import { loadCalendarWeek, loadCustomers, createReservationAction, cancelReservationAction } from "./actions";
+import { isDemoError } from "@/services/labels";
 import { toast } from "sonner";
 import type { CalendarEvent, CalendarCourt, CalendarCustomer, CalendarDay } from "@/lib/calendar-types";
 import type { ReservationFormValues } from "@/lib/validations/reservation";
@@ -80,7 +75,7 @@ export function CalendarClient() {
   // Fetch data
   React.useEffect(() => {
     let cancelled = false;
-    Promise.all([getCalendarEvents(weekStart), getCustomers()])
+    Promise.all([loadCalendarWeek(weekStart), loadCustomers()])
       .then(([evData, custData]) => {
         if (cancelled) return;
         setEvents(evData.events);
@@ -139,11 +134,11 @@ export function CalendarClient() {
 
   const handleCreateSubmit = async (data: ReservationFormValues) => {
     try {
-      const newEvent = await createReservation(data);
+      const newEvent = await createReservationAction(data);
       setEvents((prev) => [...prev, newEvent]);
       setDialogOpen(false);
     } catch (error) {
-      if (!isDemoModeError(error)) {
+      if (!isDemoError(error)) {
         console.error("Error al crear la reserva:", error);
         toast.error("No se pudo crear la reserva", {
           description: error instanceof Error ? error.message : "Intentá de nuevo más tarde.",
@@ -177,7 +172,7 @@ export function CalendarClient() {
 
   const handleCancelReservation = async (reservationId: string) => {
     try {
-      await cancelReservation(reservationId);
+      await cancelReservationAction(reservationId);
     } catch {
       // Demo mode: update locally
       setEvents((prev) =>

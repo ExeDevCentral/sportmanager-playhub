@@ -1,7 +1,5 @@
 import { isDemoMode } from "@/lib/demo";
 import { fetchBackend, isBackendConfigured } from "@/lib/backend";
-import { getComplexScope } from "@/services/db";
-import { createClient } from "@/lib/supabase/server";
 import type { CustomerStats, CustomerStatus, NotificationChannel } from "@/types/database";
 import type { ReservationDetail } from "@/types/database";
 
@@ -126,24 +124,9 @@ export async function getCustomers(): Promise<CustomerStats[]> {
     }
     return getDemoCustomers();
   }
-
-  const scope = await getComplexScope();
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("v_customer_stats")
-    .select("*")
-    .eq("complex_id", scope.complexId)
-    .order("created_at", { ascending: false });
-  if (error) throw new Error(error.message);
-
-  return (data ?? []).map((c) => ({
-    ...c,
-    reservations_count: Number(c.reservations_count),
-    cancellations_count: Number(c.cancellations_count),
-    no_shows_count: Number(c.no_shows_count),
-    total_spent: Number(c.total_spent),
-    favorite_hour: c.favorite_hour != null ? Number(c.favorite_hour) : null,
-  }));
+  // La implementación real vive en customers-real.ts (server-only) para no
+  // arrastrar cookies()/RLS al bundle de los client components.
+  return (await import("@/services/customers-real")).getCustomersReal();
 }
 
 export async function getCustomerHistory(customerId: string): Promise<ReservationDetail[]> {
@@ -156,21 +139,5 @@ export async function getCustomerHistory(customerId: string): Promise<Reservatio
     }
     return getDemoHistory(customerId);
   }
-
-  const scope = await getComplexScope();
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("v_reservations_detail")
-    .select("*")
-    .eq("complex_id", scope.complexId)
-    .eq("customer_id", customerId)
-    .order("starts_at", { ascending: false })
-    .limit(100);
-  if (error) throw new Error(error.message);
-  return (data ?? []).map((r) => ({
-    ...r,
-    price: Number(r.price),
-    deposit_amount: Number(r.deposit_amount),
-    paid_amount: Number(r.paid_amount),
-  }));
+  return (await import("@/services/customers-real")).getCustomerHistoryReal(customerId);
 }

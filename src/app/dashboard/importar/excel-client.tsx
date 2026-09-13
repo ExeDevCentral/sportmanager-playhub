@@ -45,7 +45,8 @@ import {
   type ImportMapping,
   type ValidatedRow,
 } from "@/lib/excel";
-import { getImportHistory, getExistingCustomers, type ImportJobSummary } from "@/services/excel";
+import { loadImportHistory, loadExistingCustomers } from "./actions";
+import type { ImportJobSummary } from "@/services/excel";
 import { formatDate } from "@/lib/format";
 
 type Step = 1 | 2 | 3;
@@ -68,7 +69,7 @@ export function ExcelClient() {
 
   React.useEffect(() => {
     let cancelled = false;
-    Promise.all([getImportHistory(), getExistingCustomers()])
+    Promise.all([loadImportHistory(), loadExistingCustomers()])
       .then(([h, e]) => {
         if (cancelled) return;
         setHistory(h);

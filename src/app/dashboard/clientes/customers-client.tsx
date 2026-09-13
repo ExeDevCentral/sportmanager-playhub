@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import { formatCurrency, formatNumber, formatDate } from "@/lib/format";
 import { downloadCSV } from "@/lib/csv";
-import { getCustomers, getCustomerHistory } from "@/services/customers";
+import { loadCustomers, loadCustomerHistory } from "./actions";
 import type { CustomerStats, ReservationDetail, NotificationChannel } from "@/types/database";
 import { toast } from "sonner";
 
@@ -59,7 +59,7 @@ export function CustomersClient() {
 
   React.useEffect(() => {
     let cancelled = false;
-    getCustomers()
+    loadCustomers()
       .then((data) => {
         if (cancelled) return;
         setCustomers(data);
@@ -75,7 +75,7 @@ export function CustomersClient() {
     const customerId = selected?.customer_id;
     if (!customerId) return;
     let cancelled = false;
-    getCustomerHistory(customerId)
+    loadCustomerHistory(customerId)
       .then((data) => {
         if (!cancelled) setHistory(data);
       })

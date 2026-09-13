@@ -22,12 +22,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatCurrency, formatDate } from "@/lib/format";
-import {
-  getPaymentsData,
-  PAYMENT_CONCEPT_LABEL,
-  PAYMENT_PROVIDER_LABEL,
-  type PaymentSummary,
-} from "@/services/payments";
+import { reloadPayments } from "./actions";
+import { PAYMENT_CONCEPT_LABEL, PAYMENT_PROVIDER_LABEL } from "@/services/labels";
+import type { PaymentSummary } from "@/services/payments";
 import type { PaymentStatus } from "@/types/database";
 
 const STATUS_VARIANT: Record<PaymentStatus, "default" | "secondary" | "destructive" | "outline"> = {
@@ -49,7 +46,7 @@ export function PaymentsClient() {
 
   React.useEffect(() => {
     let cancelled = false;
-    getPaymentsData()
+    reloadPayments()
       .then((data) => {
         if (cancelled) return;
         setPayments(data.payments);

@@ -24,11 +24,9 @@ import {
 } from "@/components/ui/table";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { downloadCSV } from "@/lib/csv";
-import {
-  getReservationHistory,
-  HISTORY_STATUS_LABEL,
-  type HistoryRecord,
-} from "@/services/history";
+import { reloadHistory } from "./actions";
+import { HISTORY_STATUS_LABEL } from "@/services/labels";
+import type { HistoryRecord } from "@/services/history";
 import type { ReservationStatus } from "@/types/database";
 
 const STATUS_VARIANT: Record<ReservationStatus, "default" | "secondary" | "destructive" | "outline"> = {
@@ -60,7 +58,7 @@ export function HistoricosClient({ initialHistory }: { initialHistory: HistoryRe
 
   const reload = () => {
     setLoading(true);
-    getReservationHistory()
+    reloadHistory()
       .then((h) => setRecords(h))
       .catch(() => {
         toast.error("No se pudo actualizar el histórico");
