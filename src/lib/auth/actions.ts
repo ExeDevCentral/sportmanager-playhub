@@ -61,6 +61,30 @@ export async function demoSignIn(
   redirect("/dashboard");
 }
 
+/** Acceso directo en 1 clic con rol predeterminado para evaluación y portafolio */
+export async function quickDemoSignIn(role: DemoRole = "owner"): Promise<void> {
+  if (!isDemoMode()) {
+    redirect("/login");
+  }
+  const validRole: DemoRole = isDemoRole(role) ? role : "owner";
+  const cookieStore = await cookies();
+  cookieStore.set(DEMO_SESSION_COOKIE, DEMO_SESSION_VALUE, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30,
+  });
+  cookieStore.set(DEMO_ROLE_COOKIE, validRole, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30,
+  });
+  redirect("/dashboard");
+}
+
 /** Cambia el perfil demo (dueño / operador / plataforma) sin volver al login. */
 export async function setDemoRole(role: DemoRole): Promise<void> {
   if (!isDemoMode() || !isDemoRole(role)) {

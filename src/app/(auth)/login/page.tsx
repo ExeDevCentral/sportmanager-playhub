@@ -17,15 +17,15 @@ export default function LoginPage() {
       <div className="flex flex-col items-center gap-2 text-center">
         <Link
           href="/"
-          className="flex items-center gap-2 text-2xl font-semibold tracking-tight"
+          className="group flex items-center gap-2.5 text-2xl font-bold tracking-tight"
         >
-          <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-transform group-hover:scale-105">
             S
           </span>
-          SportManager
+          <span>SportManager<span className="text-primary">/PlayHub</span></span>
         </Link>
-        <p className="text-sm text-muted-foreground">
-          El sistema operativo digital de tu centro deportivo
+        <p className="max-w-xs text-sm text-muted-foreground">
+          Sistema integral de reservas, canchas y administración deportiva
         </p>
       </div>
 

@@ -87,13 +87,19 @@ export function LandingPage() {
             <a href="#funciones" className="transition-colors hover:text-white">Funciones</a>
             <a href="#como-funciona" className="transition-colors hover:text-white">Cómo funciona</a>
             <a href="#faq" className="transition-colors hover:text-white">FAQ</a>
+            <Link href="/reservar" className="inline-flex items-center gap-1.5 rounded-full border border-[#c9f36a]/40 bg-[#c9f36a]/10 px-3 py-1 text-xs font-medium text-[#c9f36a] transition-colors hover:bg-[#c9f36a]/20">
+              <Volleyball className="size-3.5" />
+              Reservar Cancha
+            </Link>
           </nav>
 
           <div className="hidden items-center gap-3 sm:flex">
-            <Link href="/login" className="rounded-full px-4 py-2 text-[13px] font-medium text-white/70 transition-colors hover:text-white">Iniciar sesión</Link>
-            <a href="#demo" className="marketing-btn-primary group inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[13px]">
-              Probar plataforma <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-            </a>
+            <Link href="/login" className="rounded-full px-4 py-2 text-[13px] font-medium text-white/70 transition-colors hover:text-white">
+              Ingreso Admin
+            </Link>
+            <Link href="/login" className="marketing-btn-primary group inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[13px]">
+              Ver Dashboard Demo <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+            </Link>
           </div>
 
           <button type="button" className="marketing-btn-secondary flex size-11 items-center justify-center rounded-full sm:hidden" onClick={() => setMenuOpen((open) => !open)} aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"} aria-expanded={menuOpen}>
@@ -107,7 +113,13 @@ export function LandingPage() {
               <a href="#funciones" onClick={() => setMenuOpen(false)}>Funciones</a>
               <a href="#como-funciona" onClick={() => setMenuOpen(false)}>Cómo funciona</a>
               <a href="#faq" onClick={() => setMenuOpen(false)}>FAQ</a>
-              <a href="#demo" onClick={() => setMenuOpen(false)} className="marketing-btn-primary mt-2 inline-flex w-fit items-center gap-2 rounded-full px-4 py-2.5 text-[13px]">Probar plataforma <ArrowRight className="size-4" /></a>
+              <Link href="/reservar" onClick={() => setMenuOpen(false)} className="inline-flex items-center gap-2 text-sm font-semibold text-[#c9f36a]">
+                <Volleyball className="size-4" />
+                Portal de Reservas para Jugadores
+              </Link>
+              <Link href="/login" onClick={() => setMenuOpen(false)} className="marketing-btn-primary mt-2 inline-flex w-fit items-center gap-2 rounded-full px-4 py-2.5 text-[13px]">
+                Acceder al Dashboard Demo <ArrowRight className="size-4" />
+              </Link>
             </nav>
           </div>
         )}
@@ -125,28 +137,47 @@ export function LandingPage() {
           <div className="marketing-court pointer-events-none absolute -right-40 bottom-0 hidden h-[420px] w-[720px] rotate-6 opacity-[0.10] lg:block" />
           <div className="relative mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-10">
             <div className="max-w-xl">
-              <div className="marketing-reveal mb-7 inline-flex items-center gap-2 rounded-full border border-[#d4af37]/35 bg-[#d4af37]/[0.08] px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-[#ead89b]">
+              <div className="marketing-reveal mb-7 inline-flex items-center gap-2 rounded-full border border-[#d4af37]/35 bg-[#d4af37]/[0.08] px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#ead89b]">
                 <span className="relative flex size-2"><span className="absolute inline-flex size-full animate-ping rounded-full bg-[#d4af37] opacity-50" /><span className="relative inline-flex size-2 rounded-full bg-[#d4af37]" /></span>
-                Operación en tiempo real
+                Demo en Vivo · Gestión Deportiva SaaS
               </div>
               <h1 className="marketing-reveal marketing-delay-1 max-w-2xl text-[clamp(3.2rem,7vw,6.5rem)] font-semibold leading-[0.92] tracking-[-0.075em]">
                 Tu complejo, <span className="bg-gradient-to-r from-[#d4af37] via-[#c9f36a] to-[#9ed04f] bg-clip-text text-transparent">en juego.</span>
               </h1>
               <p className="marketing-reveal marketing-delay-2 mt-7 max-w-lg text-base leading-7 text-white/55 sm:text-lg">
-                Reservas, pagos, clientes y equipo. SportManager convierte el caos de WhatsApp y Excel en un centro de operaciones que trabaja con vos.
+                Reservas online en tiempo real, grilla con prevención de colisiones GiST, importación/exportación Excel y caja automatizada. SportManager convierte el caos operativo en un centro de control profesional.
               </p>
               <div className="marketing-reveal marketing-delay-3 mt-9 flex flex-col gap-3 sm:flex-row">
                 <Link href="/reservar" className="marketing-btn-primary marketing-btn-glow group inline-flex min-h-12 items-center justify-center gap-3 rounded-full px-6 text-sm">
                   Reservá tu turno <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                 </Link>
-                <a href="#demo" className="marketing-btn-secondary group inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-medium">
-                  Ver cómo funciona <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-                </a>
                 <Link href="/login" className="marketing-btn-secondary group inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-medium">
-                  Iniciar sesión <MoveUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  Explorar Dashboard <MoveUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </Link>
+                <a href="#demo" className="marketing-btn-secondary group inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-5 text-sm font-medium">
+                  Simulación <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                </a>
               </div>
-              <div className="marketing-reveal marketing-delay-4 mt-10 flex flex-wrap gap-x-6 gap-y-3 text-xs text-white/40">
+
+              {/* Showcase Banner de Evaluación */}
+              <div className="marketing-reveal marketing-delay-4 mt-8 rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-md">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-2.5 text-xs text-white/80">
+                    <Sparkles className="size-4 text-[#c9f36a] shrink-0" />
+                    <span><strong>Modo Portafolio:</strong> Evaluá el flujo de reservas para jugadores o ingresá al panel de administración completo en 1 clic.</span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Link href="/reservar" className="rounded-full bg-[#c9f36a]/15 px-3 py-1 text-xs font-semibold text-[#c9f36a] hover:bg-[#c9f36a]/25 transition-colors">
+                      Jugador →
+                    </Link>
+                    <Link href="/login" className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white hover:bg-white/20 transition-colors">
+                      Admin →
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              <div className="marketing-reveal marketing-delay-4 mt-8 flex flex-wrap gap-x-6 gap-y-3 text-xs text-white/40">
                 <span className="flex items-center gap-2"><Database className="size-4 text-[#c9f36a]" /> Base de datos propia</span>
                 <span className="flex items-center gap-2"><Smartphone className="size-4 text-[#c9f36a]" /> Funciona en celular y tablet</span>
                 <span className="flex items-center gap-2"><ShieldCheck className="size-4 text-[#c9f36a]" /> Datos protegidos</span>

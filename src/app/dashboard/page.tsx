@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { ArrowUpRight, Calendar, FileSpreadsheet, Volleyball } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -14,8 +16,7 @@ import { ReservationsChart } from "@/components/dashboard/charts/reservations-ch
 import { RevenueChart } from "@/components/dashboard/charts/revenue-chart";
 import { OccupancyChart } from "@/components/dashboard/charts/occupancy-chart";
 import { PeakHoursChart } from "@/components/dashboard/charts/peak-hours-chart";
-import { formatCurrency, greeting } from "@/lib/format";
-import { formatNumber } from "@/lib/format";
+import { formatCurrency, formatNumber, greeting } from "@/lib/format";
 import { getDashboardData } from "@/services/dashboard";
 
 export const metadata: Metadata = {
@@ -45,11 +46,53 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{greeting()}</h1>
-        <p className="text-sm text-muted-foreground">
-          Resumen de hoy · {data.today.reservationsToday} reservas programadas
-        </p>
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{greeting()}</h1>
+          <p className="text-sm text-muted-foreground">
+            Resumen de hoy · {data.today.reservationsToday} reservas programadas
+          </p>
+        </div>
+      </div>
+
+      {/* Barra de estado y accesos directos */}
+      <div className="flex flex-col gap-3 rounded-2xl border bg-card/60 p-4 shadow-xs backdrop-blur-md sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
+          <span className="relative flex size-2.5">
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex size-2.5 rounded-full bg-emerald-500" />
+          </span>
+          <span className="font-semibold text-foreground">Operación en Vivo</span>
+          <span>·</span>
+          <span>4 canchas habilitadas</span>
+          <span>·</span>
+          <span className="hidden md:inline">Base de datos lista</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/dashboard/calendario"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20"
+          >
+            <Calendar className="size-3.5" />
+            <span>Calendario</span>
+          </Link>
+          <Link
+            href="/dashboard/importar"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            <FileSpreadsheet className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span>Importar Excel</span>
+          </Link>
+          <Link
+            href="/reservar"
+            target="_blank"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            <Volleyball className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span>Ver Portal Jugador</span>
+            <ArrowUpRight className="size-3 opacity-60" />
+          </Link>
+        </div>
       </div>
 
       <KpiCards today={data.today} />

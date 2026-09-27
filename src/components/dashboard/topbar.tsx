@@ -1,7 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Crown, Globe2, LogOut, Menu, FlaskConical, Palette, UserCog } from "lucide-react";
+import Link from "next/link";
+import {
+  Check,
+  Crown,
+  ExternalLink,
+  Globe2,
+  Home,
+  LogOut,
+  Menu,
+  FlaskConical,
+  Palette,
+  UserCog,
+  Volleyball,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -91,6 +104,26 @@ export function Topbar({
       <span className="hidden text-sm capitalize text-muted-foreground md:block">{today}</span>
 
       <div className="ml-auto flex items-center gap-2">
+        <Link
+          href="/reservar"
+          target="_blank"
+          className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-800 transition-colors hover:bg-emerald-500/20 dark:text-emerald-300"
+          title="Abrir portal de reservas para jugadores"
+        >
+          <Volleyball className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+          <span>Portal Jugador</span>
+          <ExternalLink className="size-3 opacity-60" />
+        </Link>
+
+        <Link
+          href="/"
+          className="hidden md:inline-flex items-center gap-1.5 rounded-lg border border-input bg-card/70 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          title="Volver a la landing page"
+        >
+          <Home className="size-3.5" />
+          <span>Web</span>
+        </Link>
+
         <div className="flex items-center gap-1 rounded-lg border border-input bg-card/70 p-1">
           <Palette className="mx-1 size-3.5 text-muted-foreground" aria-hidden />
           {([
@@ -124,35 +157,52 @@ export function Topbar({
               </span>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-60">
             <DropdownMenuLabel className="font-normal">
               <p className="text-sm font-medium">{user?.name ?? "Invitado"}</p>
               {user?.email && <p className="text-xs text-muted-foreground">{user.email}</p>}
               {role && (
-                <p className="mt-0.5 text-xs text-primary">
+                <p className="mt-0.5 text-xs text-primary font-semibold">
                   {DEMO_ROLE_SHORT[role]} · {DEMO_ROLE_LABEL[role]}
                 </p>
               )}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/reservar" target="_blank" className="flex items-center gap-2 text-xs">
+                <Volleyball className="size-4 text-emerald-600" />
+                <span>Ver Portal de Jugadores</span>
+                <ExternalLink className="ml-auto size-3 opacity-60" />
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/" className="flex items-center gap-2 text-xs">
+                <Home className="size-4" />
+                <span>Volver al Inicio / Web</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             {demo && (
               <>
+                <p className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Cambiar Rol Demo
+                </p>
                 {role !== "owner" && (
                   <DropdownMenuItem onClick={() => setDemoRole("owner")}>
-                    <Crown className="size-4" />
-                    Ver como Admin Dueño
+                    <Crown className="size-4 text-primary" />
+                    Cambiar a Admin Dueño
                   </DropdownMenuItem>
                 )}
                 {role !== "operator" && (
                   <DropdownMenuItem onClick={() => setDemoRole("operator")}>
                     <UserCog className="size-4" />
-                    Ver como Admin Operador
+                    Cambiar a Admin Operador
                   </DropdownMenuItem>
                 )}
                 {role !== "platform" && (
                   <DropdownMenuItem onClick={() => setDemoRole("platform")}>
                     <Globe2 className="size-4" />
-                    Ver como Admin Plataforma
+                    Cambiar a Admin Plataforma
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
