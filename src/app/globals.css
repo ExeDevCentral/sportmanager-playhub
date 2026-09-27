@@ -296,18 +296,58 @@
 .marketing-hero {
   position: relative;
   overflow: hidden;
-  cursor: none;
+}
+
+.marketing-hero.hero-custom-cursor,
+.marketing-hero.hero-custom-cursor * {
+  cursor: none !important;
 }
 
 .marketing-ball {
-  will-change: transform;
-  filter: drop-shadow(0 8px 20px rgba(201,243,106,.5));
-  transition: transform .08s ease, filter .08s ease;
-  cursor: none;
+  will-change: transform, opacity;
+  pointer-events: none;
+  user-select: none;
 }
-.marketing-ball:active,
-.marketing-ball.clicking {
-  filter: drop-shadow(0 4px 12px rgba(201,243,106,.7));
+
+.marketing-ball-trail {
+  will-change: transform, opacity;
+  pointer-events: none;
+  user-select: none;
+}
+
+@keyframes ball-impact-wave {
+  0% {
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.4);
+    opacity: 0;
+  }
+}
+
+.ball-impact-wave {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 9999px;
+  border: 2px solid #c9f36a;
+  box-shadow: 0 0 16px rgba(201, 243, 106, 0.6);
+  animation: ball-impact-wave 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes target-lock-pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+}
+
+.target-lock-active {
+  animation: target-lock-pulse 1.2s ease-in-out infinite;
 }
 .marketing-hero::before {
   content: "";

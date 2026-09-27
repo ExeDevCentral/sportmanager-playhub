@@ -22,6 +22,8 @@ import {
   Sparkles,
   Users,
   Volleyball,
+  Volume2,
+  VolumeX,
   X,
 } from "lucide-react";
 
@@ -533,42 +535,160 @@ function PremiumRacket({ side }: { side: "left" | "right" }) {
   );
 }
 
-function playBallHit() {
+let sharedAudioCtx: AudioContext | null = null;
+
+function getSharedAudioContext(): AudioContext | null {
+  if (typeof window === "undefined") return null;
+  try {
+    if (!sharedAudioCtx) {
+      const AudioCtor =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (AudioCtor) sharedAudioCtx = new AudioCtor();
+    }
+    if (sharedAudioCtx && sharedAudioCtx.state === "suspended") {
+      void sharedAudioCtx.resume();
+    }
+    return sharedAudioCtx;
+  } catch {
+    return null;
+  }
+}
+
+function playBallHit(pitch = 1, volume = 0.22) {
   if (typeof window === "undefined") return;
   try {
-    const AudioCtx = (window as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext }).AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
+    const ctx = getSharedAudioContext();
+    if (!ctx) return;
     const t = ctx.currentTime;
 
-    // Synthetic paddle-ball "pop": short noise burst + freq-drop ping
-    const bufferSize = ctx.sampleRate * 0.08;
+    // Ruido de impacto percusivo en el marco o pala de carbono
+    const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * 0.04));
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.exp(-8 * i / bufferSize);
+      data[i] = (Math.random() * 2 - 1) * Math.exp((-12 * i) / bufferSize);
     }
     const noise = ctx.createBufferSource();
     noise.buffer = buffer;
     const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.18, t);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+    noiseGain.gain.setValueAtTime(0.12 * volume, t);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
     noise.connect(noiseGain).connect(ctx.destination);
     noise.start(t);
 
+    // Oscilador para el "thud / pop" elástico característico de pádel
     const osc = ctx.createOscillator();
     osc.type = "sine";
-    osc.frequency.setValueAtTime(520, t);
-    osc.frequency.exponentialRampToValueAtTime(180, t + 0.07);
+    osc.frequency.setValueAtTime(540 * pitch, t);
+    osc.frequency.exponentialRampToValueAtTime(140 * pitch, t + 0.06);
+
     const oscGain = ctx.createGain();
-    oscGain.gain.setValueAtTime(0.22, t);
-    oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+    oscGain.gain.setValueAtTime(volume, t);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+
     osc.connect(oscGain).connect(ctx.destination);
     osc.start(t);
-    osc.stop(t + 0.1);
+    osc.stop(t + 0.08);
   } catch {
-    // ignore audio errors
+    // audio errors ignored
   }
+}
+
+function PadelBallSvg({ isHovered = false }: { isHovered?: boolean }) {
+  return (
+    <svg viewBox="0 0 100 100" fill="none" className="size-full overflow-visible">
+      <defs>
+        <radialGradient id="padelBallShade" cx="35%" cy="30%" r="65%" fx="28%" fy="24%">
+          <stop offset="0%" stopColor="#f8ff9c" />
+          <stop offset="30%" stopColor="#dfff3d" />
+          <stop offset="75%" stopColor="#9ed31c" />
+          <stop offset="100%" stopColor="#4f780e" />
+        </radialGradient>
+        <radialGradient id="padelGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="70%" stopColor="#ffffff" stopOpacity="0" />
+          <stop offset="100%" stopColor="#dfff3d" stopOpacity="0.45" />
+        </radialGradient>
+        <filter id="padelSeamShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0.5" dy="1.2" stdDeviation="0.8" floodColor="#274008" floodOpacity="0.75" />
+        </filter>
+      </defs>
+
+      {/* Esfera 3D iluminada */}
+      <circle cx="50" cy="50" r="46" fill="url(#padelBallShade)" stroke="#7db913" strokeWidth="1.2" />
+      <circle cx="50" cy="50" r="46" fill="url(#padelGlow)" />
+
+      {/* Costura curva 1 (arco izquierdo de fieltro) */}
+      <path
+        d="M22 18 C38 32, 38 68, 22 82"
+        fill="none"
+        stroke="#ffffff"
+        strokeWidth="3.4"
+        strokeLinecap="round"
+        filter="url(#padelSeamShadow)"
+        opacity="0.95"
+      />
+      <path
+        d="M22 18 C38 32, 38 68, 22 82"
+        fill="none"
+        stroke="#effcc7"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        opacity="0.9"
+      />
+
+      {/* Costura curva 2 (arco derecho de fieltro) */}
+      <path
+        d="M78 18 C62 32, 62 68, 78 82"
+        fill="none"
+        stroke="#ffffff"
+        strokeWidth="3.4"
+        strokeLinecap="round"
+        filter="url(#padelSeamShadow)"
+        opacity="0.95"
+      />
+      <path
+        d="M78 18 C62 32, 62 68, 78 82"
+        fill="none"
+        stroke="#effcc7"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        opacity="0.9"
+      />
+
+      {/* Marca deportiva SportManager grabada en el fieltro */}
+      <text
+        x="50"
+        y="53.5"
+        textAnchor="middle"
+        fontSize="11"
+        fontFamily="system-ui, -apple-system, sans-serif"
+        fontWeight="800"
+        letterSpacing="0.08em"
+        fill="#264107"
+        opacity="0.45"
+      >
+        SM
+      </text>
+
+      {/* Micro-puntero óptico para clics con precisión milimétrica */}
+      <circle
+        cx="50"
+        cy="50"
+        r="3"
+        fill="#ffffff"
+        stroke="#122008"
+        strokeWidth="1.2"
+        opacity={isHovered ? 0.95 : 0.65}
+      />
+    </svg>
+  );
+}
+
+interface ImpactWave {
+  id: number;
+  x: number;
+  y: number;
 }
 
 function PaddleMatch() {
@@ -576,10 +696,71 @@ function PaddleMatch() {
   const leftRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement | null>(null);
+  const trailRefs = useRef<(HTMLDivElement | null)[]>([]);
   const lastHitRef = useRef<"left" | "right" | null>(null);
-  const mouseRef = useRef<{ x: number; y: number; active: boolean }>({ x: 0, y: 0, active: false });
-  const ballStateRef = useRef<{ x: number; y: number; rotate: number }>({ x: 0, y: 0, rotate: 0 });
+
+  // Estados del Modo Demo
+  const [demoMode, setDemoMode] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [hitCount, setHitCount] = useState(0);
+  const [waves, setWaves] = useState<ImpactWave[]>([]);
+  const [isHoveredInteractive, setIsHoveredInteractive] = useState(false);
+
+  const demoModeRef = useRef(demoMode);
+  const soundEnabledRef = useRef(soundEnabled);
+
+  useEffect(() => {
+    demoModeRef.current = demoMode;
+  }, [demoMode]);
+
+  useEffect(() => {
+    soundEnabledRef.current = soundEnabled;
+  }, [soundEnabled]);
+
+  const mouseRef = useRef<{
+    x: number;
+    y: number;
+    active: boolean;
+    isInteractive: boolean;
+    hasEntered: boolean;
+  }>({
+    x: 0,
+    y: 0,
+    active: false,
+    isInteractive: false,
+    hasEntered: false,
+  });
+
+  const ballStateRef = useRef<{
+    x: number;
+    y: number;
+    rotate: number;
+    squashImpulse: number;
+    speed: number;
+  }>({
+    x: 0,
+    y: 0,
+    rotate: 0,
+    squashImpulse: 0,
+    speed: 0,
+  });
+
+  const trailHistoryRef = useRef<{ x: number; y: number }[]>([
+    { x: 0, y: 0 },
+    { x: 0, y: 0 },
+    { x: 0, y: 0 },
+  ]);
+
   const rafRef = useRef<number | undefined>(undefined);
+
+  // Disparar onda de choque visual
+  const triggerImpactWave = (x: number, y: number) => {
+    const newWave: ImpactWave = { id: Date.now() + Math.random(), x, y };
+    setWaves((prev) => [...prev.slice(-3), newWave]);
+    setTimeout(() => {
+      setWaves((prev) => prev.filter((w) => w.id !== newWave.id));
+    }, 450);
+  };
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -588,40 +769,102 @@ function PaddleMatch() {
     sectionRef.current = document.getElementById("producto");
     if (!sectionRef.current || !ballRef.current) return;
 
+    const isFinePointer = window.matchMedia("(pointer: fine)").matches;
+
+    const updateCursorClass = (active: boolean) => {
+      if (!sectionRef.current) return;
+      if (active && demoModeRef.current && isFinePointer) {
+        sectionRef.current.classList.add("hero-custom-cursor");
+      } else {
+        sectionRef.current.classList.remove("hero-custom-cursor");
+      }
+    };
+
     const handleMouseMove = (e: MouseEvent) => {
       if (!sectionRef.current) return;
       const rect = sectionRef.current.getBoundingClientRect();
-      const inside = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+      const inside =
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom;
+
       if (!inside) {
-        mouseRef.current.active = false;
+        if (mouseRef.current.active) {
+          mouseRef.current.active = false;
+          setIsHoveredInteractive(false);
+          updateCursorClass(false);
+        }
         return;
       }
+
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      // Al entrar por primera vez, posicionar la pelota directamente sin saltos
+      if (!mouseRef.current.hasEntered || !mouseRef.current.active) {
+        ballStateRef.current.x = mouseX;
+        ballStateRef.current.y = mouseY;
+        trailHistoryRef.current = [
+          { x: mouseX, y: mouseY },
+          { x: mouseX, y: mouseY },
+          { x: mouseX, y: mouseY },
+        ];
+        mouseRef.current.hasEntered = true;
+      }
+
       mouseRef.current.active = true;
-      mouseRef.current.x = e.clientX - rect.left;
-      mouseRef.current.y = e.clientY - rect.top;
+      mouseRef.current.x = mouseX;
+      mouseRef.current.y = mouseY;
+
+      const interactive = Boolean(
+        (e.target as Element | null)?.closest("a, button, input, select, textarea, [role='button']")
+      );
+      mouseRef.current.isInteractive = interactive;
+      setIsHoveredInteractive(interactive);
+
+      updateCursorClass(true);
     };
 
     const handleMouseLeave = () => {
       mouseRef.current.active = false;
+      setIsHoveredInteractive(false);
+      updateCursorClass(false);
     };
 
     const handleClick = (e: MouseEvent) => {
       if (!sectionRef.current || !ballRef.current) return;
-      if (e.target instanceof Element && e.target.closest("a,button,input,select,textarea")) return;
       const rect = sectionRef.current.getBoundingClientRect();
-      const inside = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+      const inside =
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom;
       if (!inside) return;
 
-      // Hit nearest racket based on click position
-      const centerX = rect.width / 2;
-      const side: "left" | "right" = e.clientX - rect.left < centerX ? "left" : "right";
-      const target = side === "left" ? leftRef.current : rightRef.current;
-      if (target) {
-        target.classList.remove("hit");
-        void target.offsetWidth;
-        target.classList.add("hit");
+      // Impulso elástico instantáneo de squash
+      ballStateRef.current.squashImpulse = 1.0;
+
+      const isButton = (e.target as Element | null)?.closest("a, button, input, select, textarea");
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      // Si es click en área libre de la cancha, disparar onda de impacto y animación de raqueta
+      if (!isButton) {
+        const centerX = rect.width / 2;
+        const side: "left" | "right" = clickX < centerX ? "left" : "right";
+        const target = side === "left" ? leftRef.current : rightRef.current;
+        if (target) {
+          target.classList.remove("hit");
+          void target.offsetWidth;
+          target.classList.add("hit");
+        }
+        if (soundEnabledRef.current) {
+          playBallHit(side === "left" ? 0.95 : 1.15, 0.25);
+        }
+        triggerImpactWave(clickX, clickY);
+        setHitCount((prev) => prev + 1);
       }
-      playBallHit();
     };
 
     const loop = () => {
@@ -629,46 +872,111 @@ function PaddleMatch() {
         rafRef.current = requestAnimationFrame(loop);
         return;
       }
+
       const rect = sectionRef.current.getBoundingClientRect();
       const docHeight = document.documentElement.scrollHeight - window.innerHeight;
       const progress = docHeight > 0 ? window.scrollY / docHeight : 0;
 
-      // Scroll-driven base position (in px relative to center)
+      // Trayectoria de fondo cuando el mouse no está activo o demo está inactivo
       const normalized = progress * 8 * Math.PI;
-      const baseXPx = Math.sin(normalized) * (rect.width * 0.38);
-      const baseYPx = Math.cos(normalized * 2) * 18 + Math.sin(normalized * 3) * 8;
+      const baseXPx = rect.width / 2 + Math.sin(normalized) * (rect.width * 0.38);
+      const baseYPx = rect.height * 0.28 + Math.cos(normalized * 2) * 18 + Math.sin(normalized * 3) * 8;
       const baseRotate = progress * 720;
 
-      // Mouse target position: ball follows cursor precisely
-      let targetXPx = baseXPx;
-      let targetYPx = baseYPx;
+      let targetX = baseXPx;
+      let targetY = baseYPx;
       let targetRotate = baseRotate;
-      if (mouseRef.current.active) {
-        const centerX = rect.width / 2;
-        const centerY = rect.height * 0.28;
-        targetXPx = mouseRef.current.x - centerX;
-        targetYPx = mouseRef.current.y - centerY;
-        targetRotate += (mouseRef.current.x - centerX) * 0.05;
+
+      const isMouseControlling = demoModeRef.current && mouseRef.current.active;
+
+      if (isMouseControlling) {
+        targetX = mouseRef.current.x;
+        targetY = mouseRef.current.y;
+        targetRotate = ballStateRef.current.rotate;
       }
 
-      // Smooth interpolation (iPhone-like lag)
+      // Interpolación suave y responsiva
       const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-      const speed = mouseRef.current.active ? 0.28 : 0.06;
-      ballStateRef.current.x = lerp(ballStateRef.current.x, targetXPx, speed);
-      ballStateRef.current.y = lerp(ballStateRef.current.y, targetYPx, speed);
-      ballStateRef.current.rotate = lerp(ballStateRef.current.rotate, targetRotate, 0.08);
+      const speedFactor = isMouseControlling
+        ? mouseRef.current.isInteractive
+          ? 0.75
+          : 0.52
+        : 0.08;
 
-      ballRef.current.style.transform = `translate3d(calc(-50% + ${ballStateRef.current.x}px), ${ballStateRef.current.y}px, 0) rotate(${ballStateRef.current.rotate}deg)`;
+      const prevX = ballStateRef.current.x;
+      const prevY = ballStateRef.current.y;
 
-      // Trigger racket hit animation when ball passes near a racket
-      if (!mouseRef.current.active && Math.abs(ballStateRef.current.x) > rect.width * 0.34 && lastHitRef.current !== (ballStateRef.current.x > 0 ? "right" : "left")) {
-        lastHitRef.current = ballStateRef.current.x > 0 ? "right" : "left";
-        const target = ballStateRef.current.x > 0 ? rightRef.current : leftRef.current;
+      ballStateRef.current.x = lerp(ballStateRef.current.x, targetX, speedFactor);
+      ballStateRef.current.y = lerp(ballStateRef.current.y, targetY, speedFactor);
+
+      const vx = ballStateRef.current.x - prevX;
+      const vy = ballStateRef.current.y - prevY;
+      const currentSpeed = Math.hypot(vx, vy);
+      ballStateRef.current.speed = currentSpeed;
+
+      // Rotación angular realista proporcional al vector horizontal
+      if (isMouseControlling) {
+        ballStateRef.current.rotate += vx * 1.6;
+      } else {
+        ballStateRef.current.rotate = lerp(ballStateRef.current.rotate, targetRotate, 0.08);
+      }
+
+      // Squash & stretch elástico
+      ballStateRef.current.squashImpulse *= 0.82;
+      const speedDeform = Math.min(currentSpeed * 0.005, 0.2);
+      const squash = ballStateRef.current.squashImpulse;
+
+      let scaleX = 1 + speedDeform + squash * 0.28;
+      let scaleY = 1 - speedDeform - squash * 0.22;
+
+      // Leve aumento de presencia al interactuar sobre botones
+      if (isMouseControlling && mouseRef.current.isInteractive) {
+        scaleX *= 1.15;
+        scaleY *= 1.15;
+      }
+
+      // Aplicar transformación exacta centrada en el puntero (sin descalces en X o Y)
+      ballRef.current.style.transform = `translate3d(${ballStateRef.current.x}px, ${ballStateRef.current.y}px, 0) translate(-50%, -50%) rotate(${ballStateRef.current.rotate}deg) scale(${scaleX}, ${scaleY})`;
+
+      // Actualizar estela (trail)
+      if (trailRefs.current.length > 0) {
+        const hist = trailHistoryRef.current;
+        hist.unshift({ x: ballStateRef.current.x, y: ballStateRef.current.y });
+        if (hist.length > 4) hist.pop();
+
+        trailRefs.current.forEach((el, idx) => {
+          if (!el) return;
+          const pos = hist[idx + 1] ?? hist[0] ?? { x: ballStateRef.current.x, y: ballStateRef.current.y };
+          const opacity = isMouseControlling && currentSpeed > 3 ? (0.28 - idx * 0.08) : 0;
+          const trailScale = (1 - (idx + 1) * 0.15) * 0.85;
+          el.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0) translate(-50%, -50%) scale(${trailScale})`;
+          el.style.opacity = `${opacity}`;
+        });
+      }
+
+      // Impacto automático contra las raquetas si la pelota se acerca a los extremos laterales
+      const edgeThreshold = rect.width * 0.35;
+      const centerDist = ballStateRef.current.x - rect.width / 2;
+
+      if (
+        Math.abs(centerDist) > edgeThreshold &&
+        lastHitRef.current !== (centerDist > 0 ? "right" : "left")
+      ) {
+        const side = centerDist > 0 ? "right" : "left";
+        lastHitRef.current = side;
+        const target = side === "right" ? rightRef.current : leftRef.current;
         if (target) {
           target.classList.remove("hit");
           void target.offsetWidth;
           target.classList.add("hit");
         }
+        if (soundEnabledRef.current) {
+          playBallHit(side === "left" ? 0.95 : 1.15, 0.2);
+        }
+        triggerImpactWave(ballStateRef.current.x, ballStateRef.current.y);
+        setHitCount((prev) => prev + 1);
+      } else if (Math.abs(centerDist) < edgeThreshold * 0.6) {
+        lastHitRef.current = null;
       }
 
       rafRef.current = requestAnimationFrame(loop);
@@ -683,36 +991,130 @@ function PaddleMatch() {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mousedown", handleClick);
       sectionRef.current?.removeEventListener("mouseleave", handleMouseLeave);
+      if (sectionRef.current) {
+        sectionRef.current.classList.remove("hero-custom-cursor");
+      }
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-[1] hidden overflow-hidden lg:block" aria-hidden="true">
-      {/* Left racket */}
-      <div
-        ref={leftRef}
-        className="marketing-racket-left absolute left-[-2%] top-[6%] h-[520px] w-[280px] opacity-[0.18] xl:left-[1%] xl:h-[600px] xl:w-[320px]"
-        style={{ transform: "rotate(-12deg)" }}
-      >
-        <PremiumRacket side="left" />
+    <>
+      {/* Control flotante de Modo Demo en el Hero */}
+      <div className="absolute right-5 top-24 z-30 hidden items-center gap-2 rounded-full border border-white/15 bg-[#101e16]/85 px-3 py-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.4)] backdrop-blur-md transition-all lg:flex xl:right-10">
+        <span
+          className={`size-2 rounded-full ${
+            demoMode ? "bg-[#c9f36a] shadow-[0_0_8px_#c9f36a] animate-pulse" : "bg-white/30"
+          }`}
+        />
+        <span className="text-[11px] font-medium text-white/80">Pelota Interactiva:</span>
+        <button
+          type="button"
+          onClick={() => {
+            const next = !demoMode;
+            setDemoMode(next);
+            if (!next && sectionRef.current) {
+              sectionRef.current.classList.remove("hero-custom-cursor");
+            }
+          }}
+          className={`cursor-pointer rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide transition-all ${
+            demoMode
+              ? "bg-[#c9f36a] text-[#0d1713] hover:bg-[#dfff3d]"
+              : "bg-white/10 text-white/70 hover:bg-white/20"
+          }`}
+        >
+          {demoMode ? "Modo Demo ON" : "Estándar"}
+        </button>
+
+        {demoMode && (
+          <>
+            <span className="text-white/20">|</span>
+            <button
+              type="button"
+              onClick={() => setSoundEnabled((prev) => !prev)}
+              className="cursor-pointer text-white/60 transition-colors hover:text-white"
+              title={soundEnabled ? "Silenciar impactos" : "Activar sonido de impacto"}
+              aria-label="Toggle sonido de impacto"
+            >
+              {soundEnabled ? (
+                <Volume2 className="size-3.5 text-[#c9f36a]" />
+              ) : (
+                <VolumeX className="size-3.5 text-white/40" />
+              )}
+            </button>
+            <span className="rounded-full bg-white/10 px-2 py-0.5 font-mono text-[10px] text-[#c9f36a]">
+              {hitCount} {hitCount === 1 ? "toque" : "toques"}
+            </span>
+          </>
+        )}
       </div>
 
-      {/* Right racket */}
       <div
-        ref={rightRef}
-        className="marketing-racket-right absolute right-[-2%] top-[14%] h-[520px] w-[280px] opacity-[0.18] xl:right-[1%] xl:h-[600px] xl:w-[320px]"
-        style={{ transform: "rotate(12deg) scaleX(-1)" }}
+        className="pointer-events-none absolute inset-0 z-[1] hidden overflow-hidden lg:block"
+        aria-hidden="true"
       >
-        <PremiumRacket side="right" />
-      </div>
+        {/* Paleta izquierda */}
+        <div
+          ref={leftRef}
+          className="marketing-racket-left absolute left-[-2%] top-[6%] h-[520px] w-[280px] opacity-[0.18] xl:left-[1%] xl:h-[600px] xl:w-[320px]"
+          style={{ transform: "rotate(-12deg)" }}
+        >
+          <PremiumRacket side="left" />
+        </div>
 
-      {/* Ball cursor */}
-      <div
-        ref={ballRef}
-        className="marketing-ball pointer-events-none absolute left-1/2 top-[28%] z-20 size-5 rounded-full bg-[#dfff3d] shadow-[0_0_24px_rgba(201,243,106,.6)]"
-      />
-    </div>
+        {/* Paleta derecha */}
+        <div
+          ref={rightRef}
+          className="marketing-racket-right absolute right-[-2%] top-[14%] h-[520px] w-[280px] opacity-[0.18] xl:right-[1%] xl:h-[600px] xl:w-[320px]"
+          style={{ transform: "rotate(12deg) scaleX(-1)" }}
+        >
+          <PremiumRacket side="right" />
+        </div>
+
+        {/* Ondas de choque en impactos */}
+        {waves.map((w) => (
+          <div
+            key={w.id}
+            className="ball-impact-wave size-16"
+            style={{
+              left: `${w.x}px`,
+              top: `${w.y}px`,
+            }}
+          />
+        ))}
+
+        {/* Réplicas de estela rápida (Ghost Trail) */}
+        {[0, 1, 2].map((idx) => (
+          <div
+            key={idx}
+            ref={(el) => {
+              trailRefs.current[idx] = el;
+            }}
+            className="marketing-ball-trail pointer-events-none absolute left-0 top-0 size-7 rounded-full opacity-0"
+          >
+            <div className="size-full rounded-full bg-[#dfff3d]/40 blur-[1px]" />
+          </div>
+        ))}
+
+        {/* Pelota de pádel fotorrealista */}
+        <div
+          ref={ballRef}
+          className={`marketing-ball pointer-events-none absolute left-0 top-0 z-20 size-7.5 sm:size-8 ${
+            demoMode ? "opacity-100" : "opacity-35"
+          }`}
+          style={{
+            transform: "translate3d(-100px, -100px, 0)",
+          }}
+        >
+          {/* Anillo de enfoque cuando el mouse está sobre un botón / link interactivo */}
+          {isHoveredInteractive && (
+            <div className="target-lock-active pointer-events-none absolute left-1/2 top-1/2 size-12 rounded-full border border-[#c9f36a]/80 shadow-[0_0_14px_rgba(201,243,106,0.6)]" />
+          )}
+
+          <PadelBallSvg isHovered={isHoveredInteractive} />
+        </div>
+      </div>
+    </>
   );
 }
 
