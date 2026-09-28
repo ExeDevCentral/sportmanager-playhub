@@ -13,10 +13,37 @@ import { formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
 
 export function RatesClient({ data }: { data: SettingsData }) {
-  const [rates, setRates] = React.useState<RateView[]>(data.rates);
+  const [rates, setRates] = React.useState<RateView[]>(() => {
+    if (typeof window === "undefined") return data.rates;
+    const saved = window.localStorage.getItem("sportmanager-demo-rates");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as RateView[];
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch {
+        window.localStorage.removeItem("sportmanager-demo-rates");
+      }
+    }
+    return data.rates;
+  });
 
   const updatePrice = (id: string, price: number) => {
-    setRates((prev) => prev.map((r) => (r.id === id ? { ...r, price } : r)));
+    setRates((prev) => {
+      const next = prev.map((r) => (r.id === id ? { ...r, price } : r));
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("sportmanager-demo-rates", JSON.stringify(next));
+      }
+      return next;
+    });
+  };
+
+  const handleSaveRates = () => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("sportmanager-demo-rates", JSON.stringify(rates));
+    }
+    toast.success("Tarifas guardadas", {
+      description: "El esquema de precios y franjas horarias quedó guardado y persistido.",
+    });
   };
 
   return (
@@ -32,19 +59,26 @@ export function RatesClient({ data }: { data: SettingsData }) {
         <Button
           size="sm"
           onClick={() =>
-            setRates((prev) => [
-              ...prev,
-              {
-                id: `local-rate-${Date.now()}`,
-                court_id: null,
-                name: "Nueva tarifa",
-                day_of_week: null,
-                starts_from: "09:00",
-                ends_to: "23:00",
-                price: 14000,
-                is_active: true,
-              },
-            ])
+            setRates((prev) => {
+              const next = [
+                ...prev,
+                {
+                  id: `local-rate-${Date.now()}`,
+                  court_id: null,
+                  name: `Tarifa Especial ${prev.length + 1}`,
+                  day_of_week: null,
+                  starts_from: "09:00",
+                  ends_to: "23:00",
+                  price: 14000,
+                  is_active: true,
+                },
+              ];
+              if (typeof window !== "undefined") {
+                window.localStorage.setItem("sportmanager-demo-rates", JSON.stringify(next));
+              }
+              toast.success("Tarifa agregada", { description: "Se sumó una nueva regla tarifaria a la grilla." });
+              return next;
+            })
           }
         >
           <Plus className="mr-1 size-4" /> Agregar tarifa
@@ -85,7 +119,15 @@ export function RatesClient({ data }: { data: SettingsData }) {
                   </div>
                   <Switch
                     checked={r.is_active}
-                    onCheckedChange={(v) => setRates((prev) => prev.map((x) => (x.id === r.id ? { ...x, is_active: v } : x)))}
+                    onCheckedChange={(v) =>
+                      setRates((prev) => {
+                        const next = prev.map((x) => (x.id === r.id ? { ...x, is_active: v } : x));
+                        if (typeof window !== "undefined") {
+                          window.localStorage.setItem("sportmanager-demo-rates", JSON.stringify(next));
+                        }
+                        return next;
+                      })
+                    }
                   />
                 </div>
               </div>
@@ -95,7 +137,7 @@ export function RatesClient({ data }: { data: SettingsData }) {
             <p className="text-xs text-muted-foreground">
               Ej: {rates[0] ? `${rates[0].name ?? "Tarifa"} = ${formatCurrency(rates[0].price)}` : ""}
             </p>
-            <Button size="sm" onClick={() => toast.success("Tarifas guardadas", { description: "Los cambios quedan aplicados en esta sesión demo." })}>
+            <Button size="sm" onClick={handleSaveRates}>
               Guardar tarifas
             </Button>
           </CardFooter>

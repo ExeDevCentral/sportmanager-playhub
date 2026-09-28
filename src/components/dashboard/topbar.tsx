@@ -26,6 +26,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { signOut, setDemoRole } from "@/lib/auth/actions";
 import { DEMO_ROLE_LABEL, DEMO_ROLE_SHORT, type DemoRole } from "@/lib/auth/demo-account";
@@ -48,6 +56,7 @@ export function Topbar({
   role?: DemoRole;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const { theme, setTheme } = useDashboardTheme();
   const initials = (user?.name ?? "DE")
     .split(" ")
@@ -208,25 +217,83 @@ export function Topbar({
                 <DropdownMenuSeparator />
               </>
             )}
-            <DropdownMenuItem asChild disabled>
-              <span className="cursor-not-allowed opacity-60">Mi perfil (Fase 13)</span>
+            <DropdownMenuItem onClick={() => setProfileOpen(true)}>
+              <UserCog className="size-4" />
+              <span>Mi perfil</span>
             </DropdownMenuItem>
-            {!demo && (
-              <>
-                <DropdownMenuSeparator />
-                <form action={signOut}>
-                  <DropdownMenuItem asChild>
-                    <button type="submit" className="w-full">
-                      <LogOut className="size-4" />
-                      Cerrar sesión
-                    </button>
-                  </DropdownMenuItem>
-                </form>
-              </>
-            )}
+            <DropdownMenuSeparator />
+            <form action={signOut}>
+              <DropdownMenuItem asChild>
+                <button type="submit" className="w-full text-destructive focus:text-destructive">
+                  <LogOut className="size-4" />
+                  {demo ? "Cerrar sesión demo" : "Cerrar sesión"}
+                </button>
+              </DropdownMenuItem>
+            </form>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Diálogo interactivo: Mi Perfil */}
+      <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Mi perfil</DialogTitle>
+            <DialogDescription>
+              Datos del usuario y permisos de la sesión actual en SportManager.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex items-center gap-4 py-2">
+            <Avatar className="size-16 border-2 border-primary/20">
+              {user?.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
+              <AvatarFallback className="text-lg font-semibold">{initials}</AvatarFallback>
+            </Avatar>
+            <div>
+              <h3 className="font-semibold text-foreground">{user?.name ?? "Invitado"}</h3>
+              <p className="text-sm text-muted-foreground">{user?.email ?? "sin-email@sportmanager.app"}</p>
+              {role && (
+                <div className="mt-1 flex items-center gap-2">
+                  <Badge variant="outline" className="border-primary/40 bg-primary/10 text-primary">
+                    {DEMO_ROLE_SHORT[role]} · {DEMO_ROLE_LABEL[role]}
+                  </Badge>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-xl border bg-muted/30 p-3 text-xs space-y-2">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Complejo activo</span>
+              <span className="font-medium text-foreground">Padel Pro Club</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Estado de la cuenta</span>
+              <span className="font-medium text-emerald-600 dark:text-emerald-400">Activo (Verificado)</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Modo</span>
+              <span className="font-medium text-foreground">{demo ? "Evaluación Demo" : "Producción"}</span>
+            </div>
+          </div>
+
+          <DialogFooter className="flex-row items-center justify-between sm:justify-between">
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              onClick={() => setProfileOpen(false)}
+            >
+              <Link href="/dashboard/configuracion">
+                Ir a Configuración
+              </Link>
+            </Button>
+            <Button size="sm" onClick={() => setProfileOpen(false)}>
+              Listo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </header>
   );
 }

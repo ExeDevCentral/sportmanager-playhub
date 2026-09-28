@@ -13,10 +13,31 @@ import { toast } from "sonner";
 const DAY_NAMES = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
 export function HoursClient({ data }: { data: SettingsData }) {
-  const [hours, setHours] = React.useState<OperatingHourView[]>(data.operatingHours);
+  const [hours, setHours] = React.useState<OperatingHourView[]>(() => {
+    if (typeof window === "undefined") return data.operatingHours;
+    const saved = window.localStorage.getItem("sportmanager-demo-hours");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as OperatingHourView[];
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch {
+        window.localStorage.removeItem("sportmanager-demo-hours");
+      }
+    }
+    return data.operatingHours;
+  });
 
   const update = (dow: number, patch: Partial<OperatingHourView>) => {
     setHours((prev) => prev.map((h) => (h.day_of_week === dow ? { ...h, ...patch } : h)));
+  };
+
+  const handleSave = () => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("sportmanager-demo-hours", JSON.stringify(hours));
+    }
+    toast.success("Horarios guardados", {
+      description: "La configuración semanal de apertura y cierre quedó guardada y persistida.",
+    });
   };
 
   return (
@@ -65,7 +86,7 @@ export function HoursClient({ data }: { data: SettingsData }) {
             ))}
           </CardContent>
           <CardFooter className="justify-end">
-            <Button size="sm" onClick={() => toast.success("Horarios guardados", { description: "Los cambios quedan aplicados en esta sesión demo." })}>
+            <Button size="sm" onClick={handleSave}>
               Guardar horarios
             </Button>
           </CardFooter>

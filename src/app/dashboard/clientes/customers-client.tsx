@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Users, Loader2, Search, Phone, Mail, CalendarDays, Wallet, Star, MapPin, MessageCircle } from "lucide-react";
+import { Users, Loader2, Search, Phone, Mail, CalendarDays, Wallet, Star, MapPin, MessageCircle, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,22 @@ import { downloadCSV } from "@/lib/csv";
 import { loadCustomers, loadCustomerHistory } from "./actions";
 import type { CustomerStats, ReservationDetail, NotificationChannel } from "@/types/database";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const CHANNEL_LABEL: Record<NotificationChannel, string> = {
   email: "Email",
@@ -56,20 +72,106 @@ export function CustomersClient() {
   const [loadingHistory, setLoadingHistory] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const [selected, setSelected] = React.useState<CustomerStats | null>(null);
+  const [createOpen, setCreateOpen] = React.useState(false);
+  const [newCustomerForm, setNewCustomerForm] = React.useState({
+    first_name: "",
+    last_name: "",
+    phone: "",
+    email: "",
+    preferred_contact_channel: "whatsapp" as NotificationChannel,
+    notes: "",
+  });
 
   React.useEffect(() => {
     let cancelled = false;
     loadCustomers()
       .then((data) => {
         if (cancelled) return;
-        setCustomers(data);
-        setSelected(data[0] ?? null);
+        let finalData = data;
+        if (typeof window !== "undefined") {
+          const localStr = window.localStorage.getItem("sportmanager-demo-customers");
+          if (localStr) {
+            try {
+              const localList = JSON.parse(localStr) as CustomerStats[];
+              if (Array.isArray(localList)) {
+                const localIds = new Set(localList.map((c) => c.customer_id));
+                finalData = [...localList, ...data.filter((c) => !localIds.has(c.customer_id))];
+              }
+            } catch {
+              window.localStorage.removeItem("sportmanager-demo-customers");
+            }
+          }
+        }
+        setCustomers(finalData);
+        setSelected(finalData[0] ?? null);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
     return () => { cancelled = true; };
   }, []);
+
+  const handleCreateCustomer = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCustomerForm.first_name.trim()) {
+      toast.error("Nombre requerido", { description: "Ingresá al menos el nombre del cliente." });
+      return;
+    }
+
+    const created: CustomerStats = {
+      customer_id: `cust-${Date.now()}`,
+      complex_id: "demo-complex-001",
+      first_name: newCustomerForm.first_name.trim(),
+      last_name: newCustomerForm.last_name.trim() || null,
+      phone: newCustomerForm.phone.trim() || null,
+      email: newCustomerForm.email.trim() || null,
+      birth_date: null,
+      status: "active",
+      notes: newCustomerForm.notes.trim() || null,
+      preferred_contact_channel: newCustomerForm.preferred_contact_channel,
+      created_at: new Date().toISOString(),
+      reservations_count: 0,
+      last_reservation_at: null,
+      cancellations_count: 0,
+      no_shows_count: 0,
+      total_spent: 0,
+      favorite_court_id: null,
+      favorite_court_name: null,
+      favorite_hour: null,
+    };
+
+    setCustomers((prev) => {
+      const next = [created, ...prev];
+      if (typeof window !== "undefined") {
+        try {
+          const saved = window.localStorage.getItem("sportmanager-demo-customers");
+          let list: CustomerStats[] = [];
+          if (saved) {
+            list = JSON.parse(saved);
+          }
+          list = [created, ...list];
+          window.localStorage.setItem("sportmanager-demo-customers", JSON.stringify(list));
+        } catch {
+          // ignore localStorage error
+        }
+      }
+      return next;
+    });
+
+    setSelected(created);
+    setCreateOpen(false);
+    setNewCustomerForm({
+      first_name: "",
+      last_name: "",
+      phone: "",
+      email: "",
+      preferred_contact_channel: "whatsapp",
+      notes: "",
+    });
+    toast.success("Cliente creado exitosamente", {
+      description: `${created.first_name} ${created.last_name ?? ""} fue registrado en el sistema.`,
+    });
+  };
 
   React.useEffect(() => {
     const customerId = selected?.customer_id;
@@ -139,12 +241,10 @@ export function CustomersClient() {
           </Button>
           <Button
             size="sm"
-            onClick={() =>
-              toast.info("Nuevo cliente", {
-                description: "La alta de clientes se realiza desde reservas o importación en modo demo.",
-              })
-            }
+            onClick={() => setCreateOpen(true)}
+            className="gap-1.5"
           >
+            <Plus className="size-4" />
             Nuevo cliente
           </Button>
         </div>
@@ -307,6 +407,110 @@ export function CustomersClient() {
           )}
         </div>
       )}
+      {/* Modal Nuevo Cliente */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nuevo cliente</DialogTitle>
+            <DialogDescription>
+              Completá los datos para registrar un nuevo jugador en la base de datos.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleCreateCustomer} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="cust_first_name">Nombre *</Label>
+                <Input
+                  id="cust_first_name"
+                  placeholder="Ej: Lucas"
+                  value={newCustomerForm.first_name}
+                  onChange={(e) =>
+                    setNewCustomerForm((f) => ({ ...f, first_name: e.target.value }))
+                  }
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="cust_last_name">Apellido</Label>
+                <Input
+                  id="cust_last_name"
+                  placeholder="Ej: Silva"
+                  value={newCustomerForm.last_name}
+                  onChange={(e) =>
+                    setNewCustomerForm((f) => ({ ...f, last_name: e.target.value }))
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="cust_phone">Teléfono / WhatsApp</Label>
+              <Input
+                id="cust_phone"
+                type="tel"
+                placeholder="+54 9 11 4000-0000"
+                value={newCustomerForm.phone}
+                onChange={(e) =>
+                  setNewCustomerForm((f) => ({ ...f, phone: e.target.value }))
+                }
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="cust_email">Correo electrónico</Label>
+              <Input
+                id="cust_email"
+                type="email"
+                placeholder="cliente@email.com"
+                value={newCustomerForm.email}
+                onChange={(e) =>
+                  setNewCustomerForm((f) => ({ ...f, email: e.target.value }))
+                }
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Canal de contacto preferido</Label>
+              <Select
+                value={newCustomerForm.preferred_contact_channel}
+                onValueChange={(val: NotificationChannel) =>
+                  setNewCustomerForm((f) => ({ ...f, preferred_contact_channel: val }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar canal" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                  <SelectItem value="email">Email</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="cust_notes">Notas adicionales (opcional)</Label>
+              <Input
+                id="cust_notes"
+                placeholder="Nivel 4ta categoría, zurdo, etc."
+                value={newCustomerForm.notes}
+                onChange={(e) =>
+                  setNewCustomerForm((f) => ({ ...f, notes: e.target.value }))
+                }
+              />
+            </div>
+
+            <DialogFooter className="mt-4 gap-2 sm:gap-0">
+              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">
+                Crear cliente
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

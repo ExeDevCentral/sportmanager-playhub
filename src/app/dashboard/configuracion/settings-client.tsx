@@ -13,8 +13,32 @@ import type { SettingsData } from "@/services/settings";
 import type { ComplexSettings } from "@/types/database";
 
 export function SettingsClient({ data }: { data: SettingsData }) {
-  const [settings, setSettings] = React.useState<ComplexSettings>(data.settings);
-  const [complexName, setComplexName] = React.useState(data.complexName);
+  const [settings, setSettings] = React.useState<ComplexSettings>(() => {
+    if (typeof window === "undefined") return data.settings;
+    const saved = window.localStorage.getItem("sportmanager-demo-complex-settings");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed?.settings) return parsed.settings;
+      } catch {
+        window.localStorage.removeItem("sportmanager-demo-complex-settings");
+      }
+    }
+    return data.settings;
+  });
+
+  const [complexName, setComplexName] = React.useState<string>(() => {
+    if (typeof window === "undefined") return data.complexName;
+    const saved = window.localStorage.getItem("sportmanager-demo-complex-settings");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed?.complexName) return parsed.complexName;
+      } catch {}
+    }
+    return data.complexName;
+  });
+
   const [courts] = React.useState<CourtView[]>(data.courts);
 
   const patch = (key: keyof ComplexSettings, value: unknown) => {
@@ -22,7 +46,15 @@ export function SettingsClient({ data }: { data: SettingsData }) {
   };
 
   const save = () => {
-    toast.success("Configuración guardada", { description: "Modo demo: los cambios no persisten aún." });
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(
+        "sportmanager-demo-complex-settings",
+        JSON.stringify({ complexName, settings })
+      );
+    }
+    toast.success("Configuración guardada", {
+      description: "Los parámetros del complejo, reservas, señas y visibilidad quedaron aplicados y persistidos.",
+    });
   };
 
   return (

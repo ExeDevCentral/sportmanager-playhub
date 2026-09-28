@@ -32,6 +32,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type NotificationData = {
   templates: NotificationTemplate[];
@@ -75,13 +92,86 @@ const STATUS_LABEL: Record<NotificationStatus, string> = {
 };
 
 export function NotificationsClient({ emailSetup, data }: { emailSetup: EmailSetup; data: NotificationData }) {
-  const [templates] = React.useState<NotificationTemplate[]>(data.templates);
+  const [templates, setTemplates] = React.useState<NotificationTemplate[]>(() => {
+    if (typeof window === "undefined") return data.templates;
+    const saved = window.localStorage.getItem("sportmanager-demo-notification-templates");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch {
+        window.localStorage.removeItem("sportmanager-demo-notification-templates");
+      }
+    }
+    return data.templates;
+  });
   const [records] = React.useState<NotificationRecord[]>(data.records);
-  const [settings, setSettings] = React.useState<NotificationSettings | null>(data.settings);
+  const [settings, setSettings] = React.useState<NotificationSettings | null>(() => {
+    if (typeof window === "undefined") return data.settings;
+    const saved = window.localStorage.getItem("sportmanager-demo-notification-settings");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === "object") return parsed;
+      } catch {
+        window.localStorage.removeItem("sportmanager-demo-notification-settings");
+      }
+    }
+    return data.settings;
+  });
   const [selectedTemplateKey, setSelectedTemplateKey] = React.useState(
     data.templates.find((template) => template.channel === "email" && template.is_active)?.key ?? "",
   );
   const [confirmSendOpen, setConfirmSendOpen] = React.useState(false);
+  const [editTemplateOpen, setEditTemplateOpen] = React.useState(false);
+  const [editingTemplateKey, setEditingTemplateKey] = React.useState<string>(data.templates[0]?.key ?? "");
+  const [editSubject, setEditSubject] = React.useState("");
+  const [editBody, setEditBody] = React.useState("");
+
+  const handleOpenEdit = () => {
+    const t = templates.find((x) => x.key === (editingTemplateKey || templates[0]?.key)) ?? templates[0];
+    if (t) {
+      setEditingTemplateKey(t.key);
+      setEditSubject(t.subject ?? "");
+      setEditBody(t.body);
+    }
+    setEditTemplateOpen(true);
+  };
+
+  const handleSelectTemplateToEdit = (key: string) => {
+    setEditingTemplateKey(key);
+    const t = templates.find((x) => x.key === key);
+    if (t) {
+      setEditSubject(t.subject ?? "");
+      setEditBody(t.body);
+    }
+  };
+
+  const handleSaveTemplate = (e: React.FormEvent) => {
+    e.preventDefault();
+    setTemplates((prev) => {
+      const next = prev.map((t) =>
+        t.key === editingTemplateKey ? { ...t, subject: editSubject, body: editBody } : t
+      );
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("sportmanager-demo-notification-templates", JSON.stringify(next));
+      }
+      return next;
+    });
+    toast.success("Plantilla actualizada", {
+      description: "El contenido y asunto fueron guardados y persistidos correctamente.",
+    });
+    setEditTemplateOpen(false);
+  };
+
+  const handleSaveSettings = () => {
+    if (settings && typeof window !== "undefined") {
+      window.localStorage.setItem("sportmanager-demo-notification-settings", JSON.stringify(settings));
+    }
+    toast.success("Configuración guardada", {
+      description: "Las reglas de notificaciones automáticas quedaron guardadas y persistidas.",
+    });
+  };
   const testFormRef = React.useRef<HTMLFormElement>(null);
   const [testState, testAction, testPending] = useActionState(sendTestEmail, null);
 
@@ -306,21 +396,13 @@ export function NotificationsClient({ emailSetup, data }: { emailSetup: EmailSet
             <Button
               variant="outline"
               size="sm"
-              onClick={() =>
-                toast.info("Edición de plantillas", {
-                  description: "La edición avanzada de plantillas estará disponible en la próxima versión.",
-                })
-              }
+              onClick={handleOpenEdit}
             >
               <Pencil className="mr-1 size-4" /> Editar plantillas
             </Button>
             <Button
               size="sm"
-              onClick={() =>
-                toast.success("Configuración guardada", {
-                  description: "Los cambios quedan aplicados en esta sesión demo.",
-                })
-              }
+              onClick={handleSaveSettings}
             >
               Guardar configuración
             </Button>
@@ -351,6 +433,72 @@ export function NotificationsClient({ emailSetup, data }: { emailSetup: EmailSet
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Diálogo Editar Plantillas */}
+      <Dialog open={editTemplateOpen} onOpenChange={setEditTemplateOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Editar plantilla de notificación</DialogTitle>
+            <DialogDescription>
+              Modificá el asunto y contenido para los mensajes automáticos.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSaveTemplate} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Plantilla</Label>
+              <Select value={editingTemplateKey} onValueChange={handleSelectTemplateToEdit}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar plantilla" />
+                </SelectTrigger>
+                <SelectContent>
+                  {templates.map((tpl) => (
+                    <SelectItem key={tpl.key} value={tpl.key}>
+                      {tpl.name} ({tpl.channel === "email" ? "Email" : "WhatsApp"})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {templates.find((t) => t.key === editingTemplateKey)?.channel === "email" && (
+              <div className="space-y-1.5">
+                <Label htmlFor="tpl_subject">Asunto (Subject)</Label>
+                <Input
+                  id="tpl_subject"
+                  value={editSubject}
+                  onChange={(e) => setEditSubject(e.target.value)}
+                  placeholder="Asunto del correo"
+                />
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <Label htmlFor="tpl_body">Cuerpo del mensaje</Label>
+              <Textarea
+                id="tpl_body"
+                value={editBody}
+                onChange={(e) => setEditBody(e.target.value)}
+                rows={6}
+                className="font-mono text-xs"
+                placeholder="Contenido del mensaje..."
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Variables disponibles: {"{nombre}"}, {"{cancha}"}, {"{hora}"}, {"{complejo}"}
+              </p>
+            </div>
+
+            <DialogFooter className="mt-4 gap-2 sm:gap-0">
+              <Button type="button" variant="outline" onClick={() => setEditTemplateOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">
+                Guardar plantilla
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
