@@ -43,3 +43,6 @@ next-env.d.ts
 .vercel
 
 *.log
+
+# local assistants
+/.claude/

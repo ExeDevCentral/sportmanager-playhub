@@ -128,7 +128,7 @@ export function LandingPage() {
       </header>
 
       <main>
-        <section id="producto" className="marketing-hero relative isolate bg-[#0d1713] px-5 pb-24 pt-36 text-white sm:px-8 sm:pt-44 lg:pb-32">
+        <section id="producto" className="marketing-hero relative isolate scroll-mt-24 bg-[#0d1713] px-5 pb-24 pt-36 text-white sm:px-8 sm:pt-44 lg:pb-32">
           <PaddleMatch />
           <div className="marketing-grid pointer-events-none absolute inset-0 opacity-40" />
           <div className="marketing-particles" aria-hidden="true">
@@ -156,8 +156,8 @@ export function LandingPage() {
                 <Link href="/login" className="marketing-btn-secondary group inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-medium">
                   Explorar Dashboard <MoveUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </Link>
-                <a href="#demo" className="marketing-btn-secondary group inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-5 text-sm font-medium">
-                  Simulación <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                <a href="#como-funciona" className="marketing-btn-secondary group inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-5 text-sm font-medium">
+                  Simulación interactiva <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                 </a>
               </div>
 
@@ -218,7 +218,7 @@ export function LandingPage() {
           <div className="mt-12"><StrokeDivider label="Una sola operación. Menos ruido." /></div>
         </section>
 
-        <section id="funciones" className="bg-[#e8f0e4] px-5 py-20 sm:px-8 sm:py-28">
+        <section id="funciones" className="scroll-mt-24 bg-[#e8f0e4] px-5 py-20 sm:px-8 sm:py-28">
           <div className="mx-auto max-w-7xl">
             <Reveal><div className="max-w-2xl"><p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-[#58705a]">Una plataforma, cada movimiento</p><h2 className="text-4xl font-semibold leading-[0.98] tracking-[-0.06em] sm:text-6xl">Del primer turno a la última métrica.</h2></div></Reveal>
             <div className="mt-14 grid gap-5 lg:grid-cols-12">
@@ -230,7 +230,7 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section id="como-funciona" className="relative overflow-hidden bg-[#0d1713] px-5 py-20 text-white sm:px-8 sm:py-28">
+        <section id="como-funciona" className="relative scroll-mt-24 overflow-hidden bg-[#0d1713] px-5 py-20 text-white sm:px-8 sm:py-28">
           <div className="relative mb-16"><StrokeDivider tone="dark" /></div>
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(201,243,106,.07),transparent_40%),radial-gradient(circle_at_90%_10%,rgba(255,255,255,.04),transparent_35%)]" />
           <div className="relative mx-auto grid max-w-7xl gap-14 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
@@ -769,17 +769,6 @@ function PaddleMatch() {
     sectionRef.current = document.getElementById("producto");
     if (!sectionRef.current || !ballRef.current) return;
 
-    const isFinePointer = window.matchMedia("(pointer: fine)").matches;
-
-    const updateCursorClass = (active: boolean) => {
-      if (!sectionRef.current) return;
-      if (active && demoModeRef.current && isFinePointer) {
-        sectionRef.current.classList.add("hero-custom-cursor");
-      } else {
-        sectionRef.current.classList.remove("hero-custom-cursor");
-      }
-    };
-
     const handleMouseMove = (e: MouseEvent) => {
       if (!sectionRef.current) return;
       const rect = sectionRef.current.getBoundingClientRect();
@@ -793,7 +782,6 @@ function PaddleMatch() {
         if (mouseRef.current.active) {
           mouseRef.current.active = false;
           setIsHoveredInteractive(false);
-          updateCursorClass(false);
         }
         return;
       }
@@ -822,14 +810,11 @@ function PaddleMatch() {
       );
       mouseRef.current.isInteractive = interactive;
       setIsHoveredInteractive(interactive);
-
-      updateCursorClass(true);
     };
 
     const handleMouseLeave = () => {
       mouseRef.current.active = false;
       setIsHoveredInteractive(false);
-      updateCursorClass(false);
     };
 
     const handleClick = (e: MouseEvent) => {
@@ -991,9 +976,6 @@ function PaddleMatch() {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mousedown", handleClick);
       sectionRef.current?.removeEventListener("mouseleave", handleMouseLeave);
-      if (sectionRef.current) {
-        sectionRef.current.classList.remove("hero-custom-cursor");
-      }
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);
@@ -1011,11 +993,7 @@ function PaddleMatch() {
         <button
           type="button"
           onClick={() => {
-            const next = !demoMode;
-            setDemoMode(next);
-            if (!next && sectionRef.current) {
-              sectionRef.current.classList.remove("hero-custom-cursor");
-            }
+            setDemoMode((prev) => !prev);
           }}
           className={`cursor-pointer rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide transition-all ${
             demoMode

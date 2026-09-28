@@ -293,14 +293,14 @@
   letter-spacing: 0.02em;
 }
 
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
 .marketing-hero {
   position: relative;
   overflow: hidden;
-}
-
-.marketing-hero.hero-custom-cursor,
-.marketing-hero.hero-custom-cursor * {
-  cursor: none !important;
 }
 
 .marketing-ball {
