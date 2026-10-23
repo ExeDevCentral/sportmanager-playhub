@@ -555,3 +555,32 @@ html {
   .marketing-section-reveal, .marketing-stagger > *, .marketing-card-hover { transition: none !important; opacity: 1 !important; transform: none !important; }
   .marketing-page * { scroll-behavior: auto !important; }
 }
+
+/* Mobile Sports Field Booking Ergonomics */
+@media (max-width: 768px) {
+  .courts-grid, .match-schedule-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  .time-slot-btn {
+    min-height: 48px;
+    font-size: 0.95rem;
+    padding: 8px 14px;
+    border-radius: 10px;
+  }
+  .booking-summary-card {
+    padding: 16px 14px !important;
+    border-radius: 16px !important;
+  }
+  .pitch-banner {
+    height: 160px !important;
+    object-fit: cover !important;
+  }
+  .action-cta-dock {
+    position: sticky;
+    bottom: 0;
+    padding: 12px 16px env(safe-area-inset-bottom, 12px);
+    background: rgba(var(--background-rgb, 10, 10, 10), 0.95);
+    backdrop-filter: blur(12px);
+  }
+}
