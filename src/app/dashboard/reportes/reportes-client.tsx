@@ -2,9 +2,16 @@
 
 import * as React from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import { BarChart3, Download } from "lucide-react";
+import { BarChart3, Check, Code2, Copy, Database, Download } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -39,6 +46,37 @@ export function ReportesClient({
   data: DashboardData;
   payments: PaymentsData;
 }) {
+  const [biDataset, setBiDataset] = React.useState<"daily" | "courts" | "payments" | "customers">("daily");
+  const [copiedKind, setCopiedKind] = React.useState<"url" | "m" | null>(null);
+
+  const biFeedUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/api/bi/feed?dataset=${biDataset}&format=csv`
+      : `/api/bi/feed?dataset=${biDataset}&format=csv`;
+
+  const biJsonUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/api/bi/feed?dataset=${biDataset}&format=json`
+      : `/api/bi/feed?dataset=${biDataset}&format=json`;
+
+  const powerQueryScript = `let
+  Origen = Json.Document(Web.Contents("${biJsonUrl}")),
+  Filas = Origen[rows],
+  Tabla = Table.FromRecords(Filas)
+in
+  Tabla`;
+
+  const copyToClipboard = async (text: string, kind: "url" | "m", label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedKind(kind);
+      toast.success(label);
+      setTimeout(() => setCopiedKind(null), 2000);
+    } catch {
+      toast.error("No se pudo copiar al portapapeles");
+    }
+  };
+
   const totals = React.useMemo(() => {
     const revenue = data.last30Days.reduce((s, d) => s + d.revenue, 0);
     const reservations = data.last30Days.reduce((s, d) => s + d.reservations, 0);
@@ -209,6 +247,74 @@ export function ReportesClient({
             <p className="text-sm text-muted-foreground">Rechazado</p>
             <p className="mt-1 text-lg font-semibold tabular-nums text-destructive">{formatCurrency(payments.totals.rejected)}</p>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Conector Power BI / Excel Power Query ── */}
+      <Card>
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-300">
+              <Database className="size-4" />
+            </div>
+            <div>
+              <CardTitle className="text-base">Conector Power BI &amp; Excel</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Copiá el enlace o el script Power Query (M) y pegalo en Power BI (Obtener datos → Web / Consulta en blanco).
+              </p>
+            </div>
+          </div>
+          <Select
+            value={biDataset}
+            onValueChange={(v) => setBiDataset(v as "daily" | "courts" | "payments" | "customers")}
+          >
+            <SelectTrigger className="w-56 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="daily">Ingresos y reservas diarios</SelectItem>
+              <SelectItem value="courts">Rendimiento por cancha</SelectItem>
+              <SelectItem value="payments">Pagos y conciliación</SelectItem>
+              <SelectItem value="customers">Cartera de clientes</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() =>
+                copyToClipboard(biFeedUrl, "url", "URL CSV copiada para Power BI / Excel")
+              }
+            >
+              {copiedKind === "url" ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
+              Copiar URL Web (CSV)
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() =>
+                copyToClipboard(powerQueryScript, "m", "Script Power Query (M) copiado")
+              }
+            >
+              {copiedKind === "m" ? <Check className="size-3.5 text-emerald-500" /> : <Code2 className="size-3.5" />}
+              Copiar script Power Query (M)
+            </Button>
+            <Button type="button" size="sm" variant="ghost" className="gap-1.5" asChild>
+              <a href={biFeedUrl} target="_blank" rel="noopener noreferrer">
+                <Download className="size-3.5" />
+                Probar feed
+              </a>
+            </Button>
+          </div>
+          <pre className="overflow-x-auto rounded-lg border bg-muted/40 p-3 font-mono text-[11px] leading-relaxed text-muted-foreground">
+            {powerQueryScript}
+          </pre>
         </CardContent>
       </Card>
     </div>
