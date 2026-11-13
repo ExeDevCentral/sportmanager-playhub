@@ -59,9 +59,9 @@ export function SidebarContent({
                       href={item.href}
                       onClick={onNavigate}
                       className={cn(
-                        "flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors",
+                        "flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm transition-colors",
                         active
-                          ? "bg-primary/10 font-medium text-primary"
+                          ? "bg-primary/15 font-semibold text-emerald-900 ring-1 ring-primary/30 dark:text-primary"
                           : "text-muted-foreground hover:bg-accent hover:text-foreground"
                       )}
                     >
@@ -100,9 +100,9 @@ export function SidebarContent({
             <span className="text-[10px] opacity-60">←</span>
           </Link>
         </div>
-        <div className="mt-2 flex items-center justify-between px-2 pt-2 text-[10px] text-muted-foreground border-t border-border/40">
+        <div className="mt-2 flex items-center justify-between border-t border-border/40 px-2 pt-2 text-[10px] text-muted-foreground">
           <span>SportManager v1.2</span>
-          <span className="font-semibold text-primary">Demo Activa</span>
+          <span className="font-semibold text-emerald-700 dark:text-primary">Demo Activa</span>
         </div>
       </div>
     </div>

@@ -86,9 +86,10 @@ export function Topbar({
       </Sheet>
 
       {demo && (
-        <Badge variant="outline" className="gap-1 text-amber-600 dark:text-amber-400">
+        <Badge variant="outline" className="gap-1 border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">
           <FlaskConical className="size-3" />
-          Modo demo · datos simulados
+          <span className="hidden sm:inline">Modo demo · datos simulados</span>
+          <span className="sm:hidden">Demo</span>
         </Badge>
       )}
 
@@ -96,7 +97,11 @@ export function Topbar({
         <Badge
           variant={role === "platform" ? "outline" : "secondary"}
           className={`gap-1 ${
-            role === "owner" ? "bg-primary/10 text-primary" : role === "platform" ? "border-violet-600/30 bg-violet-600/10 text-violet-700 dark:text-violet-300" : ""
+            role === "owner"
+              ? "border border-primary/30 bg-primary/15 text-emerald-900 dark:text-primary"
+              : role === "platform"
+                ? "border-violet-600/30 bg-violet-600/10 text-violet-700 dark:text-violet-300"
+                : ""
           }`}
         >
           {role === "owner" ? (

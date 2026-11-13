@@ -77,7 +77,7 @@ export function KpiCards({ today }: { today: TodayKpis }) {
       {cards.map((card) => {
         const Icon = card.icon;
         return (
-          <Card key={card.label}>
+          <Card key={card.label} className="py-0">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-medium text-muted-foreground">{card.label}</p>
@@ -91,7 +91,7 @@ export function KpiCards({ today }: { today: TodayKpis }) {
                   }
                 />
               </div>
-              <p className="mt-1.5 text-2xl font-semibold tracking-tight">{card.value}</p>
+              <p className="mt-1.5 text-2xl font-semibold tracking-tight tabular-nums">{card.value}</p>
               {card.caption && (
                 <p className="text-xs text-muted-foreground">{card.caption}</p>
               )}

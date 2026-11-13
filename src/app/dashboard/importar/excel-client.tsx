@@ -39,6 +39,7 @@ import {
   guessMapping,
   validateRows,
   exportToExcel,
+  downloadImportTemplate,
   resultMessage,
   CAMPO_DESTINO,
   type ImportPreview,
@@ -47,9 +48,13 @@ import {
 } from "@/lib/excel";
 import { loadImportHistory, loadExistingCustomers } from "./actions";
 import type { ImportJobSummary } from "@/services/excel";
+import type { CustomerStats } from "@/types/database";
 import { formatDate } from "@/lib/format";
 
+const DEMO_CUSTOMERS_KEY = "sportmanager-demo-customers";
+
 type Step = 1 | 2 | 3;
+type ValidationFilter = "all" | "valid" | "errors";
 
 export function ExcelClient() {
   const [step, setStep] = React.useState<Step>(1);
@@ -60,12 +65,16 @@ export function ExcelClient() {
     lastName: null,
     email: null,
     phone: null,
+    notes: null,
   });
   const [validated, setValidated] = React.useState<ValidatedRow[]>([]);
+  const [validationFilter, setValidationFilter] = React.useState<ValidationFilter>("all");
   const [existing, setExisting] = React.useState<{ email: string; phone: string }[]>([]);
   const [parsing, setParsing] = React.useState(false);
   const [dragging, setDragging] = React.useState(false);
   const [history, setHistory] = React.useState<ImportJobSummary[]>([]);
+
+  const bufferRef = React.useRef<ArrayBuffer | null>(null);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -73,7 +82,27 @@ export function ExcelClient() {
       .then(([h, e]) => {
         if (cancelled) return;
         setHistory(h);
-        setExisting(e);
+        let mergedExisting = e;
+        if (typeof window !== "undefined") {
+          try {
+            const raw = window.localStorage.getItem(DEMO_CUSTOMERS_KEY);
+            if (raw) {
+              const localList = JSON.parse(raw) as CustomerStats[];
+              if (Array.isArray(localList)) {
+                mergedExisting = [
+                  ...e,
+                  ...localList.map((c) => ({
+                    email: c.email ?? "",
+                    phone: c.phone ?? "",
+                  })),
+                ];
+              }
+            }
+          } catch {
+            // ignore storage errors
+          }
+        }
+        setExisting(mergedExisting);
       })
       .catch(() => {});
     return () => { cancelled = true; };
@@ -90,52 +119,122 @@ export function ExcelClient() {
     setParsing(true);
     try {
       const buf = await file.arrayBuffer();
+      bufferRef.current = buf;
       const parsed = parseWorkbook(buf);
+      if (parsed.headers.length === 0 || parsed.rows.length === 0) {
+        toast.error("Archivo vacío", { description: "La hoja seleccionada no contiene filas con datos." });
+        return;
+      }
       setPreview(parsed);
       setMapping(guessMapping(parsed.headers));
       setFileName(file.name);
       setValidated([]);
+      setValidationFilter("all");
       setStep(2);
       toast.success(`Archivo cargado: ${file.name}`, {
         description: `${parsed.rows.length} filas · hoja "${parsed.activeSheet}"`,
       });
     } catch {
-      toast.error("No se pudo leer el archivo");
+      toast.error("No se pudo leer el archivo", {
+        description: "Verificá que no esté dañado o protegido con contraseña.",
+      });
     } finally {
       setParsing(false);
     }
   };
 
+  const handleSheetChange = (sheetName: string) => {
+    if (!bufferRef.current) return;
+    try {
+      const parsed = parseWorkbook(bufferRef.current, sheetName);
+      setPreview(parsed);
+      setMapping(guessMapping(parsed.headers));
+      setValidated([]);
+    } catch {
+      toast.error("No se pudo cambiar de hoja");
+    }
+  };
+
   const runValidation = () => {
     if (!preview) return;
+    if (!mapping.firstName) {
+      toast.error("Mapeá la columna Nombre", {
+        description: "Seleccioná qué columna del archivo corresponde al nombre del cliente.",
+      });
+      return;
+    }
     const result = validateRows(preview, mapping, existing);
     setValidated(result);
+    setValidationFilter("all");
     setStep(3);
   };
 
   const handleImport = () => {
-    const valid = validated.filter((r) => r.isValid).length;
-    toast.success(`Importación completada`, {
-      description: `Se importaron ${valid} clientes correctamente (modo demo).`,
+    const validRows = validated.filter((r) => r.isValid);
+    if (validRows.length === 0) return;
+
+    const now = Date.now();
+    const newCustomers: CustomerStats[] = validRows.map((row, index) => ({
+      customer_id: `cust-imp-${now}-${index}`,
+      complex_id: "demo-complex-001",
+      first_name: row.data.firstName,
+      last_name: row.data.lastName || null,
+      phone: row.data.phone || null,
+      email: row.data.email || null,
+      birth_date: null,
+      status: "active",
+      notes: row.data.notes || null,
+      preferred_contact_channel: row.data.phone ? "whatsapp" : "email",
+      created_at: new Date().toISOString(),
+      reservations_count: 0,
+      last_reservation_at: null,
+      cancellations_count: 0,
+      no_shows_count: 0,
+      total_spent: 0,
+      favorite_court_id: null,
+      favorite_court_name: null,
+      favorite_hour: null,
+    }));
+
+    if (typeof window !== "undefined") {
+      try {
+        const raw = window.localStorage.getItem(DEMO_CUSTOMERS_KEY);
+        const current = raw ? (JSON.parse(raw) as CustomerStats[]) : [];
+        const merged = [...newCustomers, ...(Array.isArray(current) ? current : [])];
+        window.localStorage.setItem(DEMO_CUSTOMERS_KEY, JSON.stringify(merged));
+      } catch {
+        // ignore storage quota error
+      }
+    }
+
+    setExisting((prev) => [
+      ...prev,
+      ...validRows.map((r) => ({ email: r.data.email, phone: r.data.phone })),
+    ]);
+
+    toast.success("Importación completada", {
+      description: `Se agregaron ${validRows.length} clientes a tu base. Ya podés verlos en la sección Clientes.`,
     });
+
     setHistory((prev) => [
       {
-        id: `job-${Date.now()}`,
+        id: `job-${now}`,
         file_name: fileName ?? "importacion.xlsx",
         sheet_name: preview?.activeSheet ?? null,
         entity_types: ["customers"],
         status: "completed",
         total_rows: validated.length,
-        valid_rows: valid,
-        invalid_rows: validated.length - valid,
-        imported_rows: valid,
-        skipped_rows: 0,
+        valid_rows: validRows.length,
+        invalid_rows: validated.length - validRows.length,
+        imported_rows: validRows.length,
+        skipped_rows: validated.length - validRows.length,
         started_at: new Date().toISOString(),
         finished_at: new Date().toISOString(),
         created_at: new Date().toISOString(),
       },
       ...prev,
     ]);
+    bufferRef.current = null;
     setStep(1);
     setPreview(null);
     setFileName(null);
@@ -264,10 +363,25 @@ export function ExcelClient() {
                 <div>
                   <p className="font-medium">Arrastrá tu archivo Excel aquí</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Formatos .xlsx, .xls o .csv · Se detectan hojas, columnas y se validan los datos
+                    Formatos .xlsx, .xls o .csv · Se detectan hojas, columnas y se validan duplicados
                   </p>
                 </div>
-                <Button type="button" variant="outline">Seleccionar archivo</Button>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <Button type="button" variant="outline">Seleccionar archivo</Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      downloadImportTemplate();
+                    }}
+                  >
+                    <Download className="size-3.5" />
+                    Descargar plantilla .xlsx
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -276,18 +390,37 @@ export function ExcelClient() {
             <div className="space-y-4">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <FileCheck2 className="size-4 text-emerald-600" /> {fileName}
-                    <Badge variant="secondary">{preview.rows.length} filas</Badge>
-                  </CardTitle>
-                  <CardDescription>
-                    Hoja activa: <strong>{preview.activeSheet}</strong> · {preview.rows.length} filas ·{" "}
-                    {preview.headers.length} columnas
-                  </CardDescription>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <FileCheck2 className="size-4 text-emerald-600" /> {fileName}
+                        <Badge variant="secondary">{preview.rows.length} filas</Badge>
+                      </CardTitle>
+                      <CardDescription>
+                        Hoja activa: <strong>{preview.activeSheet}</strong> · {preview.rows.length} filas ·{" "}
+                        {preview.headers.length} columnas
+                      </CardDescription>
+                    </div>
+                    {preview.sheets.length > 1 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Hoja:</span>
+                        <Select value={preview.activeSheet} onValueChange={handleSheetChange}>
+                          <SelectTrigger className="h-8 w-44 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {preview.sheets.map((s) => (
+                              <SelectItem key={s} value={s}>{s}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {(["firstName", "lastName", "email", "phone"] as const).map((key) => (
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {(["firstName", "lastName", "email", "phone", "notes"] as const).map((key) => (
                       <div key={key} className="grid gap-1.5">
                         <label className="text-xs font-medium text-muted-foreground">
                           Campo destino: {CAMPO_DESTINO[key]}
@@ -386,7 +519,32 @@ export function ExcelClient() {
               </Card>
 
               <Card>
-                <CardContent className="max-h-64 overflow-auto p-0">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Detalle de filas</CardTitle>
+                  <div className="flex gap-1.5">
+                    {(
+                      [
+                        { id: "all", label: `Todas (${validated.length})` },
+                        { id: "valid", label: `Válidas (${validated.filter((r) => r.isValid).length})` },
+                        { id: "errors", label: `Errores (${validated.filter((r) => !r.isValid).length})` },
+                      ] as const
+                    ).map((f) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => setValidationFilter(f.id)}
+                        className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+                          validationFilter === f.id
+                            ? "bg-foreground text-background"
+                            : "bg-muted text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                </CardHeader>
+                <CardContent className="max-h-72 overflow-auto p-0">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -398,7 +556,16 @@ export function ExcelClient() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {validated.slice(0, 12).map((r) => (
+                      {validated
+                        .filter((r) =>
+                          validationFilter === "valid"
+                            ? r.isValid
+                            : validationFilter === "errors"
+                              ? !r.isValid
+                              : true
+                        )
+                        .slice(0, 100)
+                        .map((r) => (
                         <TableRow key={r.rowNumber} className={r.isValid ? "" : "bg-red-50/40 dark:bg-red-950/20"}>
                           <TableCell className="text-xs text-muted-foreground">{r.rowNumber}</TableCell>
                           <TableCell>
@@ -429,9 +596,13 @@ export function ExcelClient() {
                 <Button variant="outline" onClick={() => setStep(2)}>
                   <ArrowLeft className="mr-1 size-4" /> Ajustar mapeo
                 </Button>
-                <Button onClick={handleImport} className="gap-2">
+                <Button
+                  onClick={handleImport}
+                  disabled={validated.filter((r) => r.isValid).length === 0}
+                  className="gap-2"
+                >
                   <FileCheck2 className="size-4" />
-                  Importar {validated.filter((r) => r.isValid).length} filas
+                  Importar {validated.filter((r) => r.isValid).length} clientes
                 </Button>
               </div>
             </div>

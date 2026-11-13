@@ -98,18 +98,56 @@ function CourtRow({
   onEventClick?: WeekGridProps["onEventClick"];
 }) {
   const courtEvents = events.filter((e) => e.court_id === court.id);
+  const rowHeight = HOUR_HEIGHT * (HOUR_END - HOUR_START);
 
   return (
     <div className="contents">
       {/* Court label (sticky left) */}
-      <div className="sticky left-0 z-20 flex items-center border-b border-r bg-background/95 px-3 py-2 text-sm font-medium backdrop-blur supports-[backdrop-filter]:bg-background/80"
-           style={{ height: HOUR_HEIGHT * (HOUR_END - HOUR_START) }}>
-        <div className="flex flex-col gap-0.5">
-          <span className="truncate">{court.name}</span>
-          <span className={cn("text-[10px]", court.status === "active" ? "text-emerald-600" : "text-muted-foreground")}>
-            {court.status === "active" ? "● Activa" : court.status === "maintenance" ? "● Mantenimiento" : "● Inactiva"}
+      <div
+        className="sticky left-0 z-20 flex items-center overflow-hidden border-b border-r bg-background/95 px-3 py-2 text-sm font-medium backdrop-blur supports-[backdrop-filter]:bg-background/85"
+        style={{ height: rowHeight }}
+      >
+        <div className="flex w-full min-w-0 flex-col gap-1">
+          <span className="line-clamp-2 leading-tight font-semibold text-foreground" title={court.name}>
+            {court.name}
+          </span>
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 text-[11px] font-medium",
+              court.status === "active"
+                ? "text-emerald-600 dark:text-emerald-400"
+                : "text-muted-foreground"
+            )}
+          >
+            <span
+              className={cn(
+                "size-1.5 rounded-full",
+                court.status === "active" ? "bg-emerald-500" : "bg-muted-foreground"
+              )}
+            />
+            {court.status === "active"
+              ? "Activa"
+              : court.status === "maintenance"
+                ? "Mantenimiento"
+                : "Inactiva"}
           </span>
         </div>
+      </div>
+
+      {/* Time gutter (sticky) */}
+      <div
+        className="sticky left-[148px] z-20 border-b border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85"
+        style={{ height: rowHeight }}
+      >
+        {HOURS.map((h) => (
+          <div
+            key={h}
+            className="absolute inset-x-0 flex items-start justify-end pr-2 pt-0.5 text-[11px] text-muted-foreground tabular-nums"
+            style={{ top: (h - HOUR_START) * HOUR_HEIGHT }}
+          >
+            {h.toString().padStart(2, "0")}:00
+          </div>
+        ))}
       </div>
 
       {/* Day columns */}
@@ -119,7 +157,7 @@ function CourtRow({
           <div
             key={day.date}
             className="relative border-b border-r"
-            style={{ height: HOUR_HEIGHT * (HOUR_END - HOUR_START) }}
+            style={{ height: rowHeight }}
           >
             {/* Hour grid lines */}
             {HOURS.map((h) => (
@@ -163,50 +201,39 @@ function CourtRow({
 }
 
 export function WeekGrid({ days, courts, events, onSlotClick, onEventClick }: WeekGridProps) {
-  const totalHeight = HOUR_HEIGHT * (HOUR_END - HOUR_START);
-
   return (
     <div className="overflow-x-auto rounded-lg border bg-background">
-      <div className="min-w-[700px]">
-        {/* Header row: court label + day columns */}
-        <div className="sticky top-0 z-30 contents border-b bg-background">
-          <div className="sticky left-0 z-30 flex h-12 items-center border-r bg-background/95 px-3 text-xs font-medium text-muted-foreground backdrop-blur supports-[backdrop-filter]:bg-background/80">
-            Cancha
-          </div>
-          {days.map((day) => (
-            <div key={day.date} className="flex h-12 items-center justify-center border-r text-sm font-medium">
-              {day.label}
-            </div>
-          ))}
+      <div
+        className="grid min-w-[780px]"
+        style={{ gridTemplateColumns: `148px 54px repeat(${days.length}, minmax(110px, 1fr))` }}
+      >
+        {/* Header row: court label + hour label + day columns */}
+        <div className="sticky left-0 top-0 z-30 flex h-11 items-center border-b border-r bg-background/95 px-3 text-xs font-medium text-muted-foreground backdrop-blur supports-[backdrop-filter]:bg-background/85">
+          Cancha
         </div>
-
-        {/* Time column + court rows */}
-        <div className="relative grid" style={{ gridTemplateColumns: `100px repeat(${days.length}, 1fr)` }}>
-          {/* Time labels (absolute, sticky) */}
-          <div className="absolute left-0 top-0 z-10" style={{ height: totalHeight }}>
-            {HOURS.map((h) => (
-              <div
-                key={h}
-                className="absolute left-0 flex h-8 w-[100px] items-start justify-end pr-2 pt-0 text-[11px] text-muted-foreground tabular-nums"
-                style={{ top: (h - HOUR_START) * HOUR_HEIGHT }}
-              >
-                {h.toString().padStart(2, "0")}:00
-              </div>
-            ))}
-          </div>
-
-          {/* Court rows */}
-          {courts.map((court) => (
-            <CourtRow
-              key={court.id}
-              court={court}
-              days={days}
-              events={events}
-              onSlotClick={onSlotClick}
-              onEventClick={onEventClick}
-            />
-          ))}
+        <div className="sticky left-[148px] top-0 z-30 flex h-11 items-center justify-end border-b border-r bg-background/95 pr-2 text-xs font-medium text-muted-foreground backdrop-blur supports-[backdrop-filter]:bg-background/85">
+          Hora
         </div>
+        {days.map((day) => (
+          <div
+            key={day.date}
+            className="sticky top-0 z-20 flex h-11 items-center justify-center border-b border-r bg-background/95 px-2 text-sm font-medium backdrop-blur supports-[backdrop-filter]:bg-background/85"
+          >
+            {day.label}
+          </div>
+        ))}
+
+        {/* Court rows */}
+        {courts.map((court) => (
+          <CourtRow
+            key={court.id}
+            court={court}
+            days={days}
+            events={events}
+            onSlotClick={onSlotClick}
+            onEventClick={onEventClick}
+          />
+        ))}
       </div>
     </div>
   );

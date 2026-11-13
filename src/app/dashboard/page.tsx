@@ -71,7 +71,7 @@ export default async function DashboardPage() {
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/dashboard/calendario"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/15 px-3 py-1.5 text-xs font-semibold text-emerald-900 transition-colors hover:bg-primary/25 dark:text-primary"
           >
             <Calendar className="size-3.5" />
             <span>Calendario</span>
@@ -104,10 +104,10 @@ export default async function DashboardPage() {
           ["Cancha más rentable", bestCourt?.court ?? "—", bestCourt ? formatCurrency(bestCourt.revenue) : "Sin datos"],
           ["Ocupación general", `${averageOccupancy}%`, "promedio de canchas"],
         ].map(([label, value, caption]) => (
-          <Card key={label} className="dashboard-summary-card">
+          <Card key={label} className="dashboard-summary-card py-0">
             <CardContent className="p-4">
               <p className="text-xs font-medium text-muted-foreground">{label}</p>
-              <p className="mt-1 text-xl font-semibold tracking-tight">{value}</p>
+              <p className="mt-1 text-xl font-semibold tracking-tight tabular-nums">{value}</p>
               <p className="text-xs text-muted-foreground">{caption}</p>
             </CardContent>
           </Card>
@@ -128,12 +128,12 @@ export default async function DashboardPage() {
           <CardHeader>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className={`mb-1 text-xs font-medium ${periodVariation >= 0 ? "text-primary" : "text-muted-foreground"}`}>
+                <p className={`mb-1 text-xs font-medium ${periodVariation >= 0 ? "text-emerald-700 dark:text-primary" : "text-muted-foreground"}`}>
                   {periodVariation >= 0 ? "↑" : "↓"} {Math.abs(periodVariation)}% vs. primeros 15 días
                 </p>
                 <CardTitle className="text-base">Ingresos · últimos 30 días</CardTitle>
               </div>
-              <p className="text-xl font-semibold tracking-tight">{formatCurrency(totalRevenue)}</p>
+              <p className="text-xl font-semibold tracking-tight tabular-nums">{formatCurrency(totalRevenue)}</p>
             </div>
           </CardHeader>
           <CardContent>
@@ -164,11 +164,11 @@ export default async function DashboardPage() {
       </div>
 
       <Card>
-        <CardHeader className="flex-row items-center justify-between">
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">Agenda de hoy</CardTitle>
-          <Badge variant="secondary">{data.todaySchedule.length} turnos</Badge>
+          <Badge variant="secondary" className="tabular-nums">{data.todaySchedule.length} turnos</Badge>
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>

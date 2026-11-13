@@ -41,8 +41,7 @@ export async function demoSignIn(
   if (!matched) {
     return { error: "Email o contraseña demo incorrectos" };
   }
-  const rawRole = String(formData.get("role") ?? matched.role) as DemoRole;
-  const role: DemoRole = isDemoRole(rawRole) ? rawRole : matched.role;
+  const role: DemoRole = matched.role;
   const cookieStore = await cookies();
   cookieStore.set(DEMO_SESSION_COOKIE, DEMO_SESSION_VALUE, {
     httpOnly: true,

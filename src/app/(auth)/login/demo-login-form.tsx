@@ -21,24 +21,24 @@ import {
   DEMO_ACCOUNT,
   DEMO_OPERATOR_ACCOUNT,
   DEMO_PLATFORM_ACCOUNT,
-  DEMO_ROLE_SHORT,
+  DEMO_ROLE_LABEL,
   type DemoRole,
 } from "@/lib/auth/demo-account";
 import { cn } from "@/lib/utils";
 
+const DEMO_ACCOUNTS = [DEMO_ACCOUNT, DEMO_OPERATOR_ACCOUNT, DEMO_PLATFORM_ACCOUNT] as const;
+
 export function DemoLoginForm() {
   const [state, action, pending] = useActionState<AuthState, FormData>(demoSignIn, undefined);
-  const [role, setRole] = useState<DemoRole>("owner");
+  const [emailInput, setEmailInput] = useState<string>(DEMO_ACCOUNT.email);
+  const [passwordInput, setPasswordInput] = useState<string>(DEMO_ACCOUNT.password);
   const [isQuickLogging, startQuickTransition] = useTransition();
   const [quickRoleTarget, setQuickRoleTarget] = useState<DemoRole | null>(null);
   const [showManualForm, setShowManualForm] = useState(false);
 
-  const accountMap: Record<DemoRole, { readonly email: string; readonly password: string; readonly name: string; readonly complex: string; readonly role: DemoRole }> = {
-    owner: DEMO_ACCOUNT,
-    operator: DEMO_OPERATOR_ACCOUNT,
-    platform: DEMO_PLATFORM_ACCOUNT,
-  };
-  const account = accountMap[role];
+  const detectedAccount = DEMO_ACCOUNTS.find(
+    (acc) => acc.email.toLowerCase() === emailInput.trim().toLowerCase()
+  );
 
   const handleQuickLogin = (selectedRole: DemoRole) => {
     setQuickRoleTarget(selectedRole);
@@ -57,10 +57,10 @@ export function DemoLoginForm() {
           </div>
           <div>
             <p className="font-semibold text-emerald-950 dark:text-emerald-200">
-              Modo Showcase / Evaluación Demo
+              Acceso por jerarquía · Modo Showcase
             </p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Para evaluar la plataforma desde el portafolio, hacé clic directo en cualquiera de los perfiles. No se requiere contraseña.
+            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+              Según el correo o perfil con el que ingreses, el sistema habilita automáticamente el panel y los permisos correspondientes a tu jerarquía. Hacé clic en cualquier rol para probarlo sin contraseña.
             </p>
           </div>
         </div>
@@ -184,26 +184,33 @@ export function DemoLoginForm() {
 
         {showManualForm && (
           <form action={action} className="mt-3 grid gap-3 rounded-lg border bg-muted/30 p-3.5">
-            <div className="grid gap-2">
-              <Label htmlFor="demo-role-select" className="text-xs">Rol para el formulario</Label>
-              <div className="flex gap-2">
-                {(["owner", "operator", "platform"] as const).map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => setRole(r)}
-                    className={cn(
-                      "flex-1 rounded-md border py-1 text-xs font-medium transition-colors",
-                      role === r
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-background text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {DEMO_ROLE_SHORT[r]}
-                  </button>
-                ))}
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-medium text-muted-foreground">
+                El sistema detecta tu jerarquía según el correo y habilita el dashboard correspondiente:
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {DEMO_ACCOUNTS.map((acc) => {
+                  const isCurrent = acc.email === emailInput.trim().toLowerCase();
+                  return (
+                    <button
+                      key={acc.email}
+                      type="button"
+                      onClick={() => {
+                        setEmailInput(acc.email);
+                        setPasswordInput(acc.password);
+                      }}
+                      className={cn(
+                        "rounded-md border px-2 py-1 text-[11px] font-medium transition-colors",
+                        isCurrent
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-background text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {acc.email}
+                    </button>
+                  );
+                })}
               </div>
-              <input type="hidden" name="role" value={role} />
             </div>
 
             <div className="grid gap-1">
@@ -213,20 +220,33 @@ export function DemoLoginForm() {
                 name="email"
                 type="email"
                 autoComplete="username"
-                value={account.email}
-                readOnly
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder="usuario@sportmanager.app"
                 className="h-8 bg-background text-xs"
               />
+              <p className="text-[11px] text-muted-foreground">
+                {detectedAccount ? (
+                  <>
+                    Panel habilitado:{" "}
+                    <span className="font-semibold text-foreground">
+                      {DEMO_ROLE_LABEL[detectedAccount.role]}
+                    </span>
+                  </>
+                ) : (
+                  "La jerarquía se asigna automáticamente según el correo registrado."
+                )}
+              </p>
             </div>
             <div className="grid gap-1">
               <Label htmlFor="demo-password" className="text-xs">Contraseña</Label>
               <Input
                 id="demo-password"
                 name="password"
-                type="text"
+                type="password"
                 autoComplete="current-password"
-                value={account.password}
-                readOnly
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
                 className="h-8 bg-background text-xs"
               />
             </div>
