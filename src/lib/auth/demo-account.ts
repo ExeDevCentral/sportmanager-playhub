@@ -7,7 +7,7 @@ export type DemoRole = "owner" | "operator" | "platform";
 export const DEMO_ACCOUNT = {
   email: "demo@sportmanager.app",
   password: "playhub2026",
-  name: "Martina Demo",
+  name: "Juan",
   complex: "SportManager Club",
   role: "owner" as DemoRole,
 } as const;
@@ -15,7 +15,7 @@ export const DEMO_ACCOUNT = {
 export const DEMO_OPERATOR_ACCOUNT = {
   email: "operador@sportmanager.app",
   password: "playhub2026",
-  name: "Ramiro Operador",
+  name: "Pedro",
   complex: "SportManager Club",
   role: "operator" as DemoRole,
 } as const;
@@ -23,10 +23,16 @@ export const DEMO_OPERATOR_ACCOUNT = {
 export const DEMO_PLATFORM_ACCOUNT = {
   email: "platform@sportmanager.app",
   password: "playhub2026",
-  name: "Débora Plataforma",
+  name: "Valeria",
   complex: "SportManager PlayHub",
   role: "platform" as DemoRole,
 } as const;
+
+export function getDemoAccountByRole(role: DemoRole) {
+  if (role === "operator") return DEMO_OPERATOR_ACCOUNT;
+  if (role === "platform") return DEMO_PLATFORM_ACCOUNT;
+  return DEMO_ACCOUNT;
+}
 
 export const DEMO_ROLE_VALUES: DemoRole[] = ["owner", "operator", "platform"];
 

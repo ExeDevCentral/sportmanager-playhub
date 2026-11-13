@@ -18,6 +18,8 @@ import { OccupancyChart } from "@/components/dashboard/charts/occupancy-chart";
 import { PeakHoursChart } from "@/components/dashboard/charts/peak-hours-chart";
 import { formatCurrency, formatNumber, greeting } from "@/lib/format";
 import { getDashboardData } from "@/services/dashboard";
+import { getActiveRole } from "@/lib/auth/role";
+import { getDemoAccountByRole } from "@/lib/auth/demo-account";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -31,7 +33,8 @@ const STATUS_LABEL: Record<string, { label: string; variant: "default" | "second
 };
 
 export default async function DashboardPage() {
-  const data = await getDashboardData();
+  const [data, role] = await Promise.all([getDashboardData(), getActiveRole()]);
+  const activeAccount = getDemoAccountByRole(role);
   const totalRevenue = data.last30Days.reduce((sum, day) => sum + day.revenue, 0);
   const totalReservations = data.last30Days.reduce((sum, day) => sum + day.reservations, 0);
   const averageOccupancy = data.courts.length
@@ -48,9 +51,9 @@ export default async function DashboardPage() {
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{greeting()}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Hola, {activeAccount.name}</h1>
           <p className="text-sm text-muted-foreground">
-            Resumen de hoy · {data.today.reservationsToday} reservas programadas
+            {greeting()} · {data.today.reservationsToday} reservas programadas para hoy
           </p>
         </div>
       </div>

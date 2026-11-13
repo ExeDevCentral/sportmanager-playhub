@@ -10,7 +10,6 @@ import {
   Home,
   LogOut,
   Menu,
-  FlaskConical,
   Palette,
   UserCog,
   Volleyball,
@@ -65,17 +64,18 @@ export function Topbar({
     .join("")
     .toUpperCase();
 
-  const today = new Date().toLocaleDateString("es-AR", {
+  const rawDate = new Date().toLocaleDateString("es-AR", {
     weekday: "long",
     day: "numeric",
     month: "long",
   });
+  const today = rawDate.charAt(0).toUpperCase() + rawDate.slice(1);
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur lg:px-6">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-2.5 border-b bg-background/95 px-4 backdrop-blur lg:px-6">
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Abrir menú">
+          <Button variant="ghost" size="icon" className="shrink-0 lg:hidden" aria-label="Abrir menú">
             <Menu className="size-5" />
           </Button>
         </SheetTrigger>
@@ -85,61 +85,68 @@ export function Topbar({
         </SheetContent>
       </Sheet>
 
-      {demo && (
-        <Badge variant="outline" className="gap-1 border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">
-          <FlaskConical className="size-3" />
-          <span className="hidden sm:inline">Modo demo · datos simulados</span>
-          <span className="sm:hidden">Demo</span>
-        </Badge>
-      )}
-
-      {role && (
-        <Badge
-          variant={role === "platform" ? "outline" : "secondary"}
-          className={`gap-1 ${
-            role === "owner"
-              ? "border border-primary/30 bg-primary/15 text-emerald-900 dark:text-primary"
-              : role === "platform"
-                ? "border-violet-600/30 bg-violet-600/10 text-violet-700 dark:text-violet-300"
-                : ""
-          }`}
-        >
-          {role === "owner" ? (
-            <Crown className="size-3" />
-          ) : role === "platform" ? (
-            <Globe2 className="size-3" />
-          ) : (
-            <UserCog className="size-3" />
+      {(demo || role) && (
+        <div className="flex shrink-0 items-center gap-2 text-xs">
+          {demo && (
+            <span
+              title="Modo demo · datos simulados"
+              className="inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 text-muted-foreground"
+            >
+              <span className="size-1.5 rounded-full bg-amber-500" />
+              <span>Demo</span>
+            </span>
           )}
-          {DEMO_ROLE_LABEL[role]}
-        </Badge>
+          {demo && role && <span className="text-border select-none">/</span>}
+          {role && (
+            <span className="inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 font-medium text-foreground">
+              {role === "owner" ? (
+                <Crown className="size-3 text-emerald-500 [[data-dashboard-theme='artistic']_&]:text-primary" />
+              ) : role === "platform" ? (
+                <Globe2 className="size-3 text-violet-500" />
+              ) : (
+                <UserCog className="size-3 text-muted-foreground" />
+              )}
+              <span>{DEMO_ROLE_SHORT[role]}</span>
+              <span className="hidden font-normal text-muted-foreground sm:inline">
+                ·{" "}
+                {role === "owner"
+                  ? "Acceso total"
+                  : role === "platform"
+                    ? "Red global"
+                    : "Turnos y caja"}
+              </span>
+            </span>
+          )}
+        </div>
       )}
 
-      <span className="hidden text-sm capitalize text-muted-foreground md:block">{today}</span>
+      <span className="hidden whitespace-nowrap text-xs font-medium text-muted-foreground xl:inline-block">
+        {today}
+      </span>
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex shrink-0 items-center gap-2">
         <Link
           href="/reservar"
           target="_blank"
-          className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-800 transition-colors hover:bg-emerald-500/20 dark:text-emerald-300"
+          className="hidden sm:inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-border bg-card/80 px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-accent"
           title="Abrir portal de reservas para jugadores"
         >
-          <Volleyball className="size-3.5 text-emerald-600 dark:text-emerald-400" />
-          <span>Portal Jugador</span>
-          <ExternalLink className="size-3 opacity-60" />
+          <Volleyball className="size-3.5 text-emerald-500" />
+          <span>Portal Jugadores</span>
+          <ExternalLink className="size-3 opacity-50" />
         </Link>
 
         <Link
           href="/"
-          className="hidden md:inline-flex items-center gap-1.5 rounded-lg border border-input bg-card/70 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          title="Volver a la landing page"
+          className="hidden lg:inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-border bg-card/80 px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          title="Volver a la página principal"
         >
           <Home className="size-3.5" />
           <span>Web</span>
         </Link>
 
-        <div className="flex items-center gap-1 rounded-lg border border-input bg-card/70 p-1">
-          <Palette className="mx-1 size-3.5 text-muted-foreground" aria-hidden />
+        <div className="flex shrink-0 items-center gap-0.5 rounded-lg border border-border bg-card/80 p-0.5">
+          <Palette className="mx-1.5 hidden size-3.5 text-muted-foreground sm:block" aria-hidden />
           {([
             ["formal", "Formal"],
             ["artistic", "Rosa gol"],
@@ -150,23 +157,25 @@ export function Topbar({
               aria-pressed={theme === value}
               onClick={() => setTheme(value)}
               aria-label={`Usar tema ${label}`}
-              className={`rounded-md px-2 py-1 text-xs transition-colors ${
-                theme === value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"
+              className={`inline-flex shrink-0 whitespace-nowrap items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                theme === value
+                  ? "bg-primary text-primary-foreground shadow-xs"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
               }`}
             >
-              {theme === value && <Check className="mr-1 inline size-3" />}
-              <span className="hidden md:inline">{label}</span>
+              {theme === value && <Check className="size-3" />}
+              <span>{label}</span>
             </button>
           ))}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 rounded-full outline-none ring-ring focus-visible:ring-2">
-              <Avatar className="size-8">
+            <button className="flex shrink-0 items-center gap-2 rounded-full px-1.5 py-1 outline-none transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring">
+              <Avatar className="size-7">
                 {user?.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
-                <AvatarFallback>{initials}</AvatarFallback>
+                <AvatarFallback className="text-xs font-semibold">{initials}</AvatarFallback>
               </Avatar>
-              <span className="hidden text-sm font-medium sm:block">
+              <span className="hidden whitespace-nowrap text-xs font-medium sm:block">
                 {user?.name ?? "Invitado"}
               </span>
             </button>

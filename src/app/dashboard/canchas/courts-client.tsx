@@ -3,7 +3,6 @@
 import * as React from "react";
 import { Volleyball, Plus, Sun, Moon, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { CourtView } from "@/services/settings";
 import type { SettingsData } from "@/services/settings";
@@ -20,16 +19,22 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const STATUS_BADGE: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  active: { label: "Activa", variant: "default" },
-  maintenance: { label: "Mantenimiento", variant: "outline" },
-  inactive: { label: "Inactiva", variant: "secondary" },
-};
-
-const SURFACE_STYLE: Record<string, string> = {
-  Techada: "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300",
-  Cemento: "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
-  Vidrio: "bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300",
+const STATUS_META: Record<string, { label: string; dotClass: string; textClass: string }> = {
+  active: {
+    label: "Activa",
+    dotClass: "bg-emerald-500",
+    textClass: "text-emerald-600 [[data-dashboard-theme='artistic']_&]:text-emerald-400",
+  },
+  maintenance: {
+    label: "Mantenimiento",
+    dotClass: "bg-amber-500",
+    textClass: "text-amber-600 [[data-dashboard-theme='artistic']_&]:text-amber-300",
+  },
+  inactive: {
+    label: "Inactiva",
+    dotClass: "bg-muted-foreground",
+    textClass: "text-muted-foreground",
+  },
 };
 
 export function CourtsClient({ data }: { data: SettingsData }) {
@@ -64,8 +69,8 @@ export function CourtsClient({ data }: { data: SettingsData }) {
       return nextCourts;
     });
     const changedCourt = courts.find((court) => court.id === pendingStatus.id);
-    toast.success("Estado actualizado oficialmente", {
-      description: `${changedCourt?.name ?? "Cancha"} ahora figura como ${STATUS_BADGE[pendingStatus.status]?.label.toLowerCase()}. El cambio queda visible en este dashboard y la sesión demo.`,
+    toast.success("Estado actualizado", {
+      description: `${changedCourt?.name ?? "Cancha"} ahora figura como ${STATUS_META[pendingStatus.status]?.label.toLowerCase()}.`,
     });
     setPendingStatus(null);
   };
@@ -110,27 +115,38 @@ export function CourtsClient({ data }: { data: SettingsData }) {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {courts.map((c) => {
-          const badge = STATUS_BADGE[c.status]!;
+          const statusMeta = STATUS_META[c.status] ?? STATUS_META.inactive!;
+          const specs = [
+            c.surface || "Estándar",
+            c.is_indoor ? "Techada" : "Descubierta",
+            c.has_lighting ? "Iluminación LED" : null,
+          ].filter(Boolean);
+
           return (
-            <Card key={c.id}>
+            <Card key={c.id} className="justify-between">
               <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <CardTitle className="text-base">{c.name}</CardTitle>
-                  <Badge variant={badge.variant}>{badge.label}</Badge>
+                  <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${statusMeta.textClass}`}>
+                    <span className={`size-1.5 rounded-full ${statusMeta.dotClass}`} />
+                    {statusMeta.label}
+                  </span>
                 </div>
                 <CardDescription className="truncate">{c.description ?? "Sin descripción"}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex flex-wrap gap-2 text-xs">
-                  <Badge variant="outline" className={SURFACE_STYLE[c.surface ?? ""]}>
-                    {c.surface ?? "Superficie"}
-                  </Badge>
-                  {c.is_indoor && <Badge variant="secondary"><Sun className="mr-1 size-3" /> Techada</Badge>}
-                  {c.has_lighting && <Badge variant="secondary"><Moon className="mr-1 size-3" /> Iluminada</Badge>}
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                  {c.is_indoor ? (
+                    <Sun className="size-3.5 text-sky-500" />
+                  ) : (
+                    <Sun className="size-3.5 text-amber-500" />
+                  )}
+                  {c.has_lighting && <Moon className="size-3.5 text-indigo-400" />}
+                  <span>{specs.join(" · ")}</span>
                 </div>
                 <div className="flex items-center justify-between border-t pt-3">
                   <span className="text-xs text-muted-foreground">
-                    {c.is_public ? "Visible en el sitio público" : "Oculta del sitio público"}
+                    {c.is_public ? "Publicada en reservas" : "Solo uso interno"}
                   </span>
                   <Button variant="outline" size="sm" onClick={() => requestStatusChange(c)}>
                     Cambiar estado
