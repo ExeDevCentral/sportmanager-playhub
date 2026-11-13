@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Settings as SettingsIcon, Save } from "lucide-react";
+import { Settings as SettingsIcon, Save, UserPlus, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,6 +41,63 @@ export function SettingsClient({ data }: { data: SettingsData }) {
   });
 
   const [courts] = React.useState<CourtView[]>(data.courts);
+
+  type StaffMember = {
+    id: string;
+    name: string;
+    email: string;
+    role: "owner" | "operator";
+    active: boolean;
+  };
+
+  const [staff, setStaff] = React.useState<StaffMember[]>(() => {
+    const defaults: StaffMember[] = [
+      { id: "st-1", name: "Juan", email: "demo@sportmanager.app", role: "owner", active: true },
+      { id: "st-2", name: "Pedro", email: "operador@sportmanager.app", role: "operator", active: true },
+    ];
+    if (typeof window === "undefined") return defaults;
+    try {
+      const saved = window.localStorage.getItem("sportmanager-demo-staff");
+      return saved ? (JSON.parse(saved) as StaffMember[]) : defaults;
+    } catch {
+      return defaults;
+    }
+  });
+  const [inviteName, setInviteName] = React.useState("");
+  const [inviteEmail, setInviteEmail] = React.useState("");
+
+  const inviteStaff = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inviteName.trim() || !inviteEmail.trim()) return;
+    const next: StaffMember[] = [
+      ...staff,
+      {
+        id: `st-${Date.now()}`,
+        name: inviteName.trim(),
+        email: inviteEmail.trim().toLowerCase(),
+        role: "operator",
+        active: true,
+      },
+    ];
+    setStaff(next);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("sportmanager-demo-staff", JSON.stringify(next));
+    }
+    toast.success("Empleado invitado", {
+      description: `${inviteName.trim()} (${inviteEmail.trim()}) habilitado como Operador.`,
+    });
+    setInviteName("");
+    setInviteEmail("");
+  };
+
+  const toggleStaffStatus = (id: string) => {
+    const next = staff.map((m) => (m.id === id ? { ...m, active: !m.active } : m));
+    setStaff(next);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("sportmanager-demo-staff", JSON.stringify(next));
+    }
+    toast.success("Estado de acceso actualizado");
+  };
 
   const patch = (key: keyof ComplexSettings, value: unknown) => {
     setSettings((s) => (s ? { ...s, [key]: value } : s));
@@ -184,6 +242,64 @@ export function SettingsClient({ data }: { data: SettingsData }) {
             onChange={(v) => patch("publish_history", v)} />
           <Toggle label="Publicar promociones" checked={settings.publish_promotions}
             onChange={(v) => patch("publish_promotions", v)} />
+        </CardContent>
+      </Card>
+
+      {/* Equipo y Staff */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Users className="size-4 text-muted-foreground" />
+            Equipo y Staff
+          </CardTitle>
+          <CardDescription>
+            Invitá empleados por email (rol Operador) o suspendé su acceso cuando corresponda.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form onSubmit={inviteStaff} className="grid gap-2 sm:grid-cols-[1fr_1.3fr_auto]">
+            <Input
+              placeholder="Nombre (ej: Sofía)"
+              value={inviteName}
+              onChange={(e) => setInviteName(e.target.value)}
+              required
+            />
+            <Input
+              type="email"
+              placeholder="empleado@club.com"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              required
+            />
+            <Button type="submit" size="sm" variant="outline" className="gap-1.5">
+              <UserPlus className="size-3.5" />
+              Invitar
+            </Button>
+          </form>
+
+          <div className="divide-y rounded-lg border">
+            {staff.map((m) => (
+              <div key={m.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 text-sm">
+                <div>
+                  <p className="font-medium">
+                    {m.name}{" "}
+                    <Badge variant="secondary" className="ml-1.5">
+                      {m.role === "owner" ? "Dueño" : "Operador"}
+                    </Badge>
+                  </p>
+                  <p className="text-xs text-muted-foreground">{m.email}</p>
+                </div>
+                {m.role !== "owner" && (
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs ${m.active ? "text-emerald-600" : "text-muted-foreground"}`}>
+                      {m.active ? "Activo" : "Suspendido"}
+                    </span>
+                    <Switch checked={m.active} onCheckedChange={() => toggleStaffStatus(m.id)} />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
 

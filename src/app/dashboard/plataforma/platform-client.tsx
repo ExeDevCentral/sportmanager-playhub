@@ -1,12 +1,20 @@
 "use client";
 
+import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Building2, CreditCard, LogIn, TrendingUp, Users, Volleyball } from "lucide-react";
+import { Building2, CreditCard, LogIn, PauseCircle, PlayCircle, TrendingUp, Users, Volleyball } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { setDemoRole } from "@/lib/auth/actions";
 import { downloadCSV } from "@/lib/csv";
 import type { PlatformOverview } from "@/services/platform";
@@ -25,6 +33,41 @@ function money(n: number): string {
 
 export function PlatformClient({ data }: { data: PlatformOverview }) {
   const router = useRouter();
+  const [complexes, setComplexes] = React.useState(() => {
+    if (typeof window === "undefined") return data.complexes;
+    try {
+      const saved = window.localStorage.getItem("sportmanager-demo-platform-complexes");
+      return saved ? (JSON.parse(saved) as typeof data.complexes) : data.complexes;
+    } catch {
+      return data.complexes;
+    }
+  });
+
+  const persistComplexes = (next: typeof data.complexes) => {
+    setComplexes(next);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("sportmanager-demo-platform-complexes", JSON.stringify(next));
+    }
+  };
+
+  const toggleStatus = (id: string) => {
+    const next = complexes.map((c) =>
+      c.id === id
+        ? { ...c, status: (c.status === "operativo" ? "pausa" : "operativo") as typeof c.status }
+        : c,
+    );
+    persistComplexes(next);
+    const updated = next.find((c) => c.id === id);
+    toast.success(`Complejo ${updated?.name ?? ""}`, {
+      description: updated?.status === "operativo" ? "Suscripción activada." : "Suscripción pausada.",
+    });
+  };
+
+  const changePlan = (id: string, plan: "starter" | "pro" | "enterprise") => {
+    const next = complexes.map((c) => (c.id === id ? { ...c, plan } : c));
+    persistComplexes(next);
+    toast.success("Plan actualizado", { description: `Nuevo plan: ${PLAN_LABEL[plan]}` });
+  };
 
   const enterAsOwner = async (complexName: string) => {
     await setDemoRole("owner");
@@ -108,12 +151,12 @@ export function PlatformClient({ data }: { data: PlatformOverview }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.complexes.map((c) => (
+              {complexes.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell>
                     <p className="font-medium">{c.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {c.owners} dueño{c.owners === 1 ? "" : "s"} · {(PLAN_LABEL as Record<string, string>)[c.plan]} · {c.customers} clientes
+                      {c.owners} dueño{c.owners === 1 ? "" : "s"} · {c.customers} clientes
                     </p>
                   </TableCell>
                   <TableCell className="text-muted-foreground">{c.vertical}</TableCell>
@@ -124,11 +167,44 @@ export function PlatformClient({ data }: { data: PlatformOverview }) {
                   <TableCell className="tabular-nums">{c.reservations30d}</TableCell>
                   <TableCell className="tabular-nums">{money(c.revenue30d)}</TableCell>
                   <TableCell className="text-right">
-                    {c.status === "operativo" && (
-                      <Button size="sm" variant="ghost" onClick={() => enterAsOwner(c.name)}>
-                        <LogIn className="mr-1 size-3.5" /> Entrar como dueño
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Select
+                        value={c.plan}
+                        onValueChange={(v) => changePlan(c.id, v as "starter" | "pro" | "enterprise")}
+                      >
+                        <SelectTrigger className="h-7 w-24 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="starter">Starter</SelectItem>
+                          <SelectItem value="pro">Pro</SelectItem>
+                          <SelectItem value="enterprise">Enterprise</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 gap-1 text-xs"
+                        onClick={() => toggleStatus(c.id)}
+                      >
+                        {c.status === "operativo" ? (
+                          <>
+                            <PauseCircle className="size-3.5 text-amber-500" />
+                            Pausar
+                          </>
+                        ) : (
+                          <>
+                            <PlayCircle className="size-3.5 text-emerald-500" />
+                            Activar
+                          </>
+                        )}
                       </Button>
-                    )}
+                      {c.status === "operativo" && (
+                        <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => enterAsOwner(c.name)}>
+                          <LogIn className="mr-1 size-3.5" /> Entrar
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

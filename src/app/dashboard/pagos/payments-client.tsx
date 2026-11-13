@@ -6,9 +6,12 @@ import {
   Building2,
   Calculator,
   ClipboardCheck,
+  Coffee,
   CreditCard,
   Download,
   Loader2,
+  Lock,
+  LockOpen,
   RotateCcw,
   ShieldAlert,
 } from "lucide-react";
@@ -58,6 +61,21 @@ import { toast } from "sonner";
 const CASH_STORAGE_KEY = "sportmanager-demo-cash-payments";
 const REFUND_STORAGE_KEY = "sportmanager-demo-refunded-payments";
 const SUPPLIER_STORAGE_KEY = "sportmanager-demo-supplier-payments";
+const SHIFT_STORAGE_KEY = "sportmanager-demo-shift-drawer";
+
+type ShiftDrawer = {
+  isOpen: boolean;
+  openedBy: string;
+  openedAt: string;
+  initialFloat: number;
+};
+
+const CANTINA_PRESETS = [
+  { label: "Tubo de pelotas x3", price: 8500 },
+  { label: "Alquiler de paleta", price: 4000 },
+  { label: "Agua / Isotónica", price: 2500 },
+  { label: "Overgrip", price: 3500 },
+] as const;
 
 type SupplierCategory = "servicios" | "mantenimiento" | "insumos" | "personal" | "otros";
 type SupplierMethod = "efectivo" | "transferencia" | "mercadopago";
@@ -187,6 +205,21 @@ export function PaymentsClient({
     note: "",
   });
 
+  // Caja por turno (Apertura / Cierre) + Venta rápida de cantina
+  const [shift, setShift] = React.useState<ShiftDrawer | null>(null);
+  const [openShiftModal, setOpenShiftModal] = React.useState(false);
+  const [initialFloatInput, setInitialFloatInput] = React.useState("25000");
+  const [closeShiftModal, setCloseShiftModal] = React.useState(false);
+  const [countedCashInput, setCountedCashInput] = React.useState("");
+
+  const [cantinaOpen, setCantinaOpen] = React.useState(false);
+  const [cantinaForm, setCantinaForm] = React.useState({
+    item: "Tubo de pelotas x3",
+    amount: "8500",
+    customer: "Venta mostrador",
+    court: "Cantina",
+  });
+
   React.useEffect(() => {
     let cancelled = false;
     reloadPayments()
@@ -200,6 +233,8 @@ export function PaymentsClient({
         setPayments(merged);
         const localSuppliers = readStorage<SupplierPayment[] | null>(SUPPLIER_STORAGE_KEY, null);
         if (localSuppliers) setSuppliers(localSuppliers);
+        const savedShift = readStorage<ShiftDrawer | null>(SHIFT_STORAGE_KEY, null);
+        if (savedShift) setShift(savedShift);
         setAuditEvents(readAuditEvents());
       })
       .finally(() => {
@@ -377,6 +412,111 @@ export function PaymentsClient({
     });
   };
 
+  const sessionCashIn = React.useMemo(() => {
+    return payments
+      .filter(
+        (p) =>
+          (p.id.startsWith("cash-") || p.id.startsWith("cantina-")) &&
+          p.status === "approved",
+      )
+      .reduce((sum, p) => sum + p.amount, 0);
+  }, [payments]);
+
+  const expectedDrawerCash = (shift?.initialFloat ?? 0) + sessionCashIn;
+  const countedCash = Number(countedCashInput) || 0;
+  const drawerDiff = countedCash - expectedDrawerCash;
+
+  const handleOpenShift = (e: React.FormEvent) => {
+    e.preventDefault();
+    const initialFloat = Math.max(0, Number(initialFloatInput) || 0);
+    const nextShift: ShiftDrawer = {
+      isOpen: true,
+      openedBy: actorName,
+      openedAt: new Date().toISOString(),
+      initialFloat,
+    };
+    setShift(nextShift);
+    writeStorage(SHIFT_STORAGE_KEY, nextShift);
+    const logged = recordAuditEvent({
+      actorName,
+      actorRole: role,
+      category: "cobro",
+      action: "Apertura de caja",
+      target: `Turno ${actorName}`,
+      amount: initialFloat,
+      detail: `Fondo inicial declarado: ${formatCurrency(initialFloat)}`,
+    });
+    setAuditEvents((prev) => [logged, ...prev]);
+    setOpenShiftModal(false);
+    toast.success("Caja abierta", {
+      description: `Fondo inicial de ${formatCurrency(initialFloat)} registrado por ${actorName}.`,
+    });
+  };
+
+  const handleCloseShift = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!shift) return;
+    const logged = recordAuditEvent({
+      actorName,
+      actorRole: role,
+      category: "cobro",
+      action: "Cierre de caja (Arqueo)",
+      target: `Turno ${shift.openedBy} → ${actorName}`,
+      amount: countedCash,
+      detail: `Esperado ${formatCurrency(expectedDrawerCash)} · Contado ${formatCurrency(countedCash)} · Diferencia ${drawerDiff >= 0 ? "+" : "-"}${formatCurrency(Math.abs(drawerDiff))}`,
+    });
+    setAuditEvents((prev) => [logged, ...prev]);
+    setShift(null);
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(SHIFT_STORAGE_KEY);
+    }
+    setCloseShiftModal(false);
+    setCountedCashInput("");
+    toast.success("Cierre de caja guardado", {
+      description: `Arqueo registrado en Auditoría del turno (${drawerDiff === 0 ? "sin diferencia" : `dif. ${formatCurrency(drawerDiff)}`}).`,
+    });
+  };
+
+  const handleCantinaSale = (e: React.FormEvent) => {
+    e.preventDefault();
+    const amount = Number(cantinaForm.amount);
+    if (!cantinaForm.item.trim() || !Number.isFinite(amount) || amount <= 0) {
+      toast.error("Ingresá un producto y monto válido");
+      return;
+    }
+    const newSale: PaymentSummary = {
+      id: `cantina-${Date.now()}`,
+      reservation_id: null,
+      customer_name: cantinaForm.customer.trim() || "Venta mostrador",
+      court_name: cantinaForm.court,
+      concept: "full",
+      amount,
+      currency: "ARS",
+      status: "approved",
+      provider: "manual",
+      provider_payment_id: `Cantina · ${cantinaForm.item.trim()}`,
+      approved_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+    };
+    const currentLocal = readStorage<PaymentSummary[]>(CASH_STORAGE_KEY, []);
+    writeStorage(CASH_STORAGE_KEY, [newSale, ...currentLocal]);
+    setPayments((prev) => [newSale, ...prev]);
+    const logged = recordAuditEvent({
+      actorName,
+      actorRole: role,
+      category: "cobro",
+      action: "Venta cantina",
+      target: `${cantinaForm.item.trim()} · ${newSale.customer_name}`,
+      amount,
+      detail: `Mostrador / ${cantinaForm.court}`,
+    });
+    setAuditEvents((prev) => [logged, ...prev]);
+    setCantinaOpen(false);
+    toast.success("Venta de cantina registrada", {
+      description: `${cantinaForm.item.trim()} · ${formatCurrency(amount)}`,
+    });
+  };
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -398,6 +538,10 @@ export function PaymentsClient({
             <Banknote className="size-4" />
             Cobrar en efectivo
           </Button>
+          <Button size="sm" variant="outline" onClick={() => setCantinaOpen(true)} className="gap-1.5">
+            <Coffee className="size-4" />
+            Venta cantina
+          </Button>
           {isOwner && (
             <Button
               size="sm"
@@ -410,6 +554,63 @@ export function PaymentsClient({
             </Button>
           )}
         </div>
+      </div>
+
+      {/* Barra de Apertura / Cierre de Caja por Turno */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3">
+        {shift?.isOpen ? (
+          <>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+              <span className="inline-flex items-center gap-1.5 font-medium text-emerald-600 [[data-dashboard-theme='artistic']_&]:text-emerald-400">
+                <LockOpen className="size-3.5" />
+                Caja abierta
+              </span>
+              <span className="text-muted-foreground">·</span>
+              <span className="text-muted-foreground">
+                Abrió <strong className="text-foreground">{shift.openedBy}</strong>
+              </span>
+              <span className="text-muted-foreground">·</span>
+              <span className="text-muted-foreground">
+                Fondo: <strong className="tabular-nums text-foreground">{formatCurrency(shift.initialFloat)}</strong>
+              </span>
+              <span className="text-muted-foreground">·</span>
+              <span className="text-muted-foreground">
+                Esperado en caja:{" "}
+                <strong className="tabular-nums text-foreground">{formatCurrency(expectedDrawerCash)}</strong>
+              </span>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => {
+                setCountedCashInput(String(expectedDrawerCash));
+                setCloseShiftModal(true);
+              }}
+            >
+              <Lock className="size-3.5" />
+              Cierre de caja (Arqueo)
+            </Button>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Lock className="size-3.5" />
+              <span>Caja del turno cerrada · Iniciá apertura para controlar fondo y arqueo final.</span>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => setOpenShiftModal(true)}
+            >
+              <LockOpen className="size-3.5" />
+              Abrir caja
+            </Button>
+          </>
+        )}
       </div>
 
       {/* Totals */}
@@ -1030,6 +1231,211 @@ export function PaymentsClient({
                 Cancelar
               </Button>
               <Button type="submit">Guardar egreso</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── MODAL APERTURA DE CAJA ── */}
+      <Dialog open={openShiftModal} onOpenChange={setOpenShiftModal}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <LockOpen className="size-4 text-emerald-600" />
+              Abrir caja del turno
+            </DialogTitle>
+            <DialogDescription>
+              Responsable: <strong>{actorName}</strong>. Ingresá el efectivo inicial en caja.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleOpenShift} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="shift_float">Fondo inicial ($)</Label>
+              <Input
+                id="shift_float"
+                type="number"
+                min={0}
+                value={initialFloatInput}
+                onChange={(e) => setInitialFloatInput(e.target.value)}
+                required
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setOpenShiftModal(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">Confirmar apertura</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── MODAL CIERRE DE CAJA (ARQUEO) ── */}
+      <Dialog open={closeShiftModal} onOpenChange={setCloseShiftModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Lock className="size-4" />
+              Cierre de caja y arqueo
+            </DialogTitle>
+            <DialogDescription>
+              Verificá el efectivo físico al finalizar el turno.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCloseShift} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3 rounded-lg border bg-muted/30 p-3 text-xs">
+              <div>
+                <p className="text-muted-foreground">Fondo inicial</p>
+                <p className="mt-0.5 text-sm font-semibold tabular-nums">
+                  {formatCurrency(shift?.initialFloat ?? 0)}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Cobros en efectivo</p>
+                <p className="mt-0.5 text-sm font-semibold tabular-nums text-emerald-600">
+                  +{formatCurrency(sessionCashIn)}
+                </p>
+              </div>
+              <div className="col-span-2 border-t pt-2">
+                <p className="text-muted-foreground">Total esperado en caja</p>
+                <p className="mt-0.5 text-lg font-bold tabular-nums">
+                  {formatCurrency(expectedDrawerCash)}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="counted_cash">Efectivo contado en caja ($)</Label>
+              <Input
+                id="counted_cash"
+                type="number"
+                min={0}
+                value={countedCashInput}
+                onChange={(e) => setCountedCashInput(e.target.value)}
+                required
+              />
+            </div>
+
+            <div
+              className={`rounded-lg border p-3 text-center text-xs ${
+                drawerDiff === 0
+                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                  : drawerDiff > 0
+                    ? "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300"
+                    : "border-destructive/30 bg-destructive/10 text-destructive"
+              }`}
+            >
+              <p className="font-medium">
+                {drawerDiff === 0
+                  ? "Caja cuadrada sin diferencias"
+                  : drawerDiff > 0
+                    ? "Sobrante de caja"
+                    : "Faltante de caja"}
+              </p>
+              <p className="mt-0.5 text-lg font-bold tabular-nums">
+                {drawerDiff >= 0 ? "+" : "-"}
+                {formatCurrency(Math.abs(drawerDiff))}
+              </p>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setCloseShiftModal(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">Cerrar turno y guardar</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── MODAL VENTA CANTINA / INSUMOS ── */}
+      <Dialog open={cantinaOpen} onOpenChange={setCantinaOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Coffee className="size-4 text-amber-600" />
+              Venta rápida de cantina
+            </DialogTitle>
+            <DialogDescription>
+              Pelotas, alquiler de paletas, bebidas y accesorios.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCantinaSale} className="space-y-4">
+            <div className="flex flex-wrap gap-1.5">
+              {CANTINA_PRESETS.map((preset) => (
+                <Button
+                  key={preset.label}
+                  type="button"
+                  size="sm"
+                  variant={cantinaForm.item === preset.label ? "default" : "outline"}
+                  className="h-7 text-xs"
+                  onClick={() =>
+                    setCantinaForm((f) => ({
+                      ...f,
+                      item: preset.label,
+                      amount: String(preset.price),
+                    }))
+                  }
+                >
+                  {preset.label} · {formatCurrency(preset.price)}
+                </Button>
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="cantina_item">Producto *</Label>
+                <Input
+                  id="cantina_item"
+                  value={cantinaForm.item}
+                  onChange={(e) => setCantinaForm((f) => ({ ...f, item: e.target.value }))}
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="cantina_amount">Importe ($) *</Label>
+                <Input
+                  id="cantina_amount"
+                  type="number"
+                  min={1}
+                  value={cantinaForm.amount}
+                  onChange={(e) => setCantinaForm((f) => ({ ...f, amount: e.target.value }))}
+                  required
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="cantina_customer">Cliente</Label>
+                <Input
+                  id="cantina_customer"
+                  value={cantinaForm.customer}
+                  onChange={(e) => setCantinaForm((f) => ({ ...f, customer: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Cancha / Origen</Label>
+                <Select
+                  value={cantinaForm.court}
+                  onValueChange={(v) => setCantinaForm((f) => ({ ...f, court: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Cantina">Mostrador / Cantina</SelectItem>
+                    <SelectItem value="Cancha 1">Cancha 1</SelectItem>
+                    <SelectItem value="Cancha 2">Cancha 2</SelectItem>
+                    <SelectItem value="Cancha 3">Cancha 3</SelectItem>
+                    <SelectItem value="Cancha 4">Cancha 4</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setCantinaOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">Registrar venta</Button>
             </DialogFooter>
           </form>
         </DialogContent>
