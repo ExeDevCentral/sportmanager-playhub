@@ -13,19 +13,21 @@ const dateFormatter = new Intl.DateTimeFormat("es-AR", {
 });
 
 export function formatCurrency(value: number): string {
-  return currencyFormatter.format(value);
+  return currencyFormatter.format(Number.isFinite(value) ? value : 0);
 }
 
 export function formatNumber(value: number): string {
-  return numberFormatter.format(value);
+  return numberFormatter.format(Number.isFinite(value) ? value : 0);
 }
 
 export function formatDate(date: Date | string): string {
-  return dateFormatter.format(typeof date === "string" ? new Date(date) : date);
+  const parsed = typeof date === "string" ? new Date(date) : date;
+  if (Number.isNaN(parsed.getTime())) return "—";
+  return dateFormatter.format(parsed);
 }
 
 export function formatPercent(value: number): string {
-  return `${Math.round(value)}%`;
+  return `${Math.round(Number.isFinite(value) ? value : 0)}%`;
 }
 
 /** "Buenos días" / "Buenas tardes" / "Buenas noches" según la hora local. */
