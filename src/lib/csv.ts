@@ -1,7 +1,16 @@
-function escapeCsv(value: string | number | null | undefined): string {
+export function escapeCsv(value: string | number | null | undefined): string {
   if (value === null || value === undefined) return "";
   const s = String(value);
-  return /[",;\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  return /[",;\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+export function buildCSVContent(
+  headers: string[],
+  rows: (string | number | null | undefined)[][],
+): string {
+  return [headers, ...rows]
+    .map((row) => row.map(escapeCsv).join(","))
+    .join("\n");
 }
 
 /** Descarga un CSV (BOM UTF-8 para que Excel lo abra bien). Solo en el cliente. */
@@ -10,9 +19,7 @@ export function downloadCSV(
   headers: string[],
   rows: (string | number | null | undefined)[][],
 ): void {
-  const content = [headers, ...rows]
-    .map((row) => row.map(escapeCsv).join(","))
-    .join("\n");
+  const content = buildCSVContent(headers, rows);
   const blob = new Blob(["\uFEFF" + content], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
