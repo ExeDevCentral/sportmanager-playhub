@@ -137,6 +137,11 @@ npm run dev
 
 ### Verification & Health Probes
 ```bash
+# Run unit tests, typecheck, and lint
+npm test
+npm run typecheck
+npm run lint
+
 # Probe standalone mock daemon health
 curl http://localhost:4000/health
 
