@@ -26,6 +26,19 @@ export const metadata: Metadata = {
   },
   description:
     "Reservas online, pagos, calendario multi-espacio, CRM, históricos de Excel y analítica para tu centro deportivo: pádel, tenis, tenis de mesa, squash, fútbol, rugby, hockey, básquet, vóley, handball, natación, kayak, remo, atletismo, running, golf, funcional y más.",
+  openGraph: {
+    type: "website",
+    locale: "es_AR",
+    title: "SportManager/PlayHub · Gestión de centros deportivos",
+    description:
+      "Reservas online, pagos, calendario multi-espacio, CRM y analítica en tiempo real para tu centro deportivo.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SportManager/PlayHub · Gestión de centros deportivos",
+    description:
+      "Reservas online, pagos, calendario multi-espacio, CRM y analítica en tiempo real para tu centro deportivo.",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
