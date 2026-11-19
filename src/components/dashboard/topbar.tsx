@@ -72,6 +72,7 @@ export function Topbar({
   const today = rawDate.charAt(0).toUpperCase() + rawDate.slice(1);
 
   return (
+    <>
     <header className="sticky top-0 z-30 flex h-14 items-center gap-2.5 border-b bg-background/95 px-4 backdrop-blur lg:px-6">
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetTrigger asChild>
@@ -309,5 +310,47 @@ export function Topbar({
         </DialogContent>
       </Dialog>
     </header>
+
+    {/* Mobile Only Ergonomic Bottom Dock in Dashboard (< lg) */}
+    <nav
+      aria-label="Navegación rápida móvil del Dashboard"
+      className="lg:hidden fixed bottom-3 inset-x-3 z-40 select-none pb-[env(safe-area-inset-bottom)]"
+    >
+      <div className="mx-auto max-w-md rounded-2xl border border-border bg-background/95 backdrop-blur-2xl shadow-[0_14px_36px_rgba(0,0,0,0.3)] p-1.5 grid grid-cols-4 items-center gap-1.5">
+        <Link
+          href="/dashboard"
+          className="flex flex-col items-center justify-center py-2 px-1 rounded-xl text-foreground hover:bg-accent active:scale-95 transition-all"
+        >
+          <Home className="size-4 text-primary" />
+          <span className="text-[10px] font-semibold mt-1 leading-none">Resumen</span>
+        </Link>
+
+        <Link
+          href="/reservar"
+          className="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-primary text-primary-foreground font-bold shadow-xs active:scale-95 transition-all"
+        >
+          <Volleyball className="size-4" />
+          <span className="text-[10px] font-bold mt-1 leading-none">Jugadores</span>
+        </Link>
+
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          className="flex flex-col items-center justify-center py-2 px-1 rounded-xl text-foreground hover:bg-accent active:scale-95 transition-all cursor-pointer"
+        >
+          <Menu className="size-4 text-primary" />
+          <span className="text-[10px] font-semibold mt-1 leading-none">Módulos</span>
+        </button>
+
+        <Link
+          href="/"
+          className="flex flex-col items-center justify-center py-2 px-1 rounded-xl text-muted-foreground hover:text-foreground active:scale-95 transition-all"
+        >
+          <ExternalLink className="size-4" />
+          <span className="text-[10px] font-semibold mt-1 leading-none">Landing</span>
+        </Link>
+      </div>
+    </nav>
+    </>
   );
 }

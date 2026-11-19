@@ -288,13 +288,53 @@ export function LandingPage() {
         </section>
       </main>
 
-      <footer className="border-t border-white/10 bg-[#0d1713] px-5 py-8 text-white sm:px-8">
+      <footer className="border-t border-white/10 bg-[#0d1713] px-5 py-8 pb-28 sm:pb-8 text-white sm:px-8">
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-5 text-xs text-white/45 sm:flex-row sm:items-center">
           <div className="flex items-center gap-2 text-sm font-semibold text-white"><span className="flex size-7 items-center justify-center rounded-lg bg-[#c9f36a] text-[#102016]"><Volleyball className="size-4" /></span>SportManager<span className="text-[#c9f36a]">/PlayHub</span></div>
           <p>El sistema operativo digital de tu centro deportivo.</p>
           <p>© 2026 SportManager · PlayHub</p>
         </div>
       </footer>
+
+      {/* Mobile Only Ergonomic Bottom Dock (< sm) — Minimalista, bien espaciado, sin superponerse */}
+      <nav
+        aria-label="Navegación rápida móvil de SportManager"
+        className="sm:hidden fixed bottom-3 inset-x-3 z-50 select-none pb-[env(safe-area-inset-bottom)]"
+      >
+        <div className="mx-auto max-w-md rounded-2xl border border-white/15 bg-[#0d1713]/95 backdrop-blur-2xl shadow-[0_14px_36px_rgba(0,0,0,0.65)] p-1.5 grid grid-cols-4 items-center gap-1.5 text-white">
+          <a
+            href="#funciones"
+            className="flex flex-col items-center justify-center py-2 px-1 rounded-xl text-white/80 hover:text-white active:scale-95 transition-all"
+          >
+            <BarChart3 className="size-4 text-[#c9f36a]" />
+            <span className="text-[10px] font-semibold mt-1 leading-none">Funciones</span>
+          </a>
+
+          <a
+            href="#como-funciona"
+            className="flex flex-col items-center justify-center py-2 px-1 rounded-xl text-white/80 hover:text-white active:scale-95 transition-all"
+          >
+            <CalendarDays className="size-4 text-[#c9f36a]" />
+            <span className="text-[10px] font-semibold mt-1 leading-none">Simulador</span>
+          </a>
+
+          <Link
+            href="/reservar"
+            className="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-[#c9f36a] text-[#102016] font-bold shadow-sm active:scale-95 transition-all"
+          >
+            <Volleyball className="size-4" />
+            <span className="text-[10px] font-extrabold mt-1 leading-none">Reservar</span>
+          </Link>
+
+          <Link
+            href="/login"
+            className="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-white/10 text-white active:scale-95 transition-all"
+          >
+            <ShieldCheck className="size-4 text-[#c9f36a]" />
+            <span className="text-[10px] font-semibold mt-1 leading-none">Admin</span>
+          </Link>
+        </div>
+      </nav>
     </div>
   );
 }

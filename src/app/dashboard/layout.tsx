@@ -61,7 +61,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <Sidebar role={role} className="sticky top-0 z-30 hidden h-svh lg:flex lg:flex-col" />
           <div className="flex min-w-0 flex-1 flex-col">
             <Topbar user={user} demo={demo} role={role} />
-            <main className="flex-1 px-4 py-6 lg:px-6">{children}</main>
+            <main className="flex-1 px-4 py-6 pb-24 lg:pb-6 lg:px-6">{children}</main>
           </div>
         </div>
       </div>
