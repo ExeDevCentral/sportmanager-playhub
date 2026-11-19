@@ -155,6 +155,9 @@ npm run build
 npm run start
 ```
 
+### Mobile Court & Operator Ergonomics (`< 768px`)
+- **Minimalist Mobile Bottom Docks**: Dedicated 4-action thumb-zone dock on the public landing page (`Funciones`, `Simulador`, `Reservar`, `Admin`) and a 4-action operator dock inside `/dashboard` (`Resumen`, `Jugadores`, `Módulos`, `Landing`) with `pb-24` clearance and zero overlap.
+
 ---
 
 ## 6. License
@@ -165,4 +168,4 @@ Distributed under the **MIT License**. Engineered for modern athletic complexes,
   <sub>Architected with operational precision by <a href="https://github.com/ExeDevCentral">ExeDevCentral</a>.</sub>
 </div>
 
-<!-- ExeDevCentral Audit & Quality Stamp: 2026-11-14 (Phase 10/10) -->
+<!-- ExeDevCentral Audit & Quality Stamp: 2026-11-19 (Mobile UX & Zero-Overlap Verification) -->
