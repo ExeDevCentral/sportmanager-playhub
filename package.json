@@ -48,7 +48,7 @@
     "type": "git",
     "url": "git+https://github.com/ExeDevCentral/sportmanager-playhub.git"
   },
-  "homepage": "https://sportmanager-playhub-vnkm.vercel.app",
+  "homepage": "https://sportmanager-playhub.vercel.app",
   "description": "Plataforma de reservas y gestión para centros deportivos: los clientes reservan, el local administra.",
   "license": "SEE LICENSE IN LICENSE"
 }
